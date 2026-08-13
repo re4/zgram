@@ -90,6 +90,10 @@ dialogsDateSkip: 5px;
 dialogsRowHeight: 62px;
 dialogsFilterPadding: point(7px, 7px);
 dialogsFilterSkip: 4px;
+dialogsModernRowMargin: margins(6px, 2px, 6px, 2px);
+dialogsModernRowRadius: 12px;
+dialogsModernRowBorder: 1px;
+dialogsModernRowBorderOpacity: 0.18;
 
 defaultDialogRow: DialogRow {
 	height: dialogsRowHeight;
@@ -99,6 +103,15 @@ defaultDialogRow: DialogRow {
 	nameTop: 10px;
 	textLeft: 68px;
 	textTop: 34px;
+}
+compactDialogRow: DialogRow(defaultDialogRow) {
+	height: 54px;
+	padding: margins(8px, 6px, 8px, 6px);
+	photoSize: 42px;
+	nameLeft: 60px;
+	nameTop: 6px;
+	textLeft: 60px;
+	textTop: 28px;
 }
 communityRequestableListItem: PeerListItem(defaultPeerListItem) {
 	height: dialogsRowHeight;            // == st::defaultDialogRow.height (62px)
@@ -115,6 +128,11 @@ taggedDialogRow: DialogRow(defaultDialogRow) {
 	textTop: 30px;
 	tagTop: 52px;
 }
+compactTaggedDialogRow: DialogRow(compactDialogRow) {
+	height: 64px;
+	textTop: 24px;
+	tagTop: 44px;
+}
 forumDialogRow: DialogRow(defaultDialogRow) {
 	height: 80px;
 	textTop: 32px;
@@ -122,9 +140,20 @@ forumDialogRow: DialogRow(defaultDialogRow) {
 	topicsSkipBig: 14px;
 	topicsHeight: 21px;
 }
+compactForumDialogRow: DialogRow(compactDialogRow) {
+	height: 70px;
+	textTop: 26px;
+	topicsSkip: 6px;
+	topicsSkipBig: 10px;
+	topicsHeight: 21px;
+}
 taggedForumDialogRow: DialogRow(forumDialogRow) {
 	height: 96px;
 	tagTop: 77px;
+}
+compactTaggedForumDialogRow: DialogRow(compactForumDialogRow) {
+	height: 84px;
+	tagTop: 65px;
 }
 communityInfoDialogRow: DialogRow(defaultDialogRow) {
 	padding: margins(22px, 8px, 18px, 8px);
@@ -145,6 +174,26 @@ communityInfoTaggedForumDialogRow: DialogRow(taggedForumDialogRow) {
 	padding: margins(22px, 8px, 18px, 8px);
 	nameLeft: 80px;
 	textLeft: 80px;
+}
+compactCommunityInfoDialogRow: DialogRow(compactDialogRow) {
+	padding: margins(20px, 6px, 16px, 6px);
+	nameLeft: 72px;
+	textLeft: 72px;
+}
+compactCommunityInfoTaggedDialogRow: DialogRow(compactTaggedDialogRow) {
+	padding: margins(20px, 6px, 16px, 6px);
+	nameLeft: 72px;
+	textLeft: 72px;
+}
+compactCommunityInfoForumDialogRow: DialogRow(compactForumDialogRow) {
+	padding: margins(20px, 6px, 16px, 6px);
+	nameLeft: 72px;
+	textLeft: 72px;
+}
+compactCommunityInfoTaggedForumDialogRow: DialogRow(compactTaggedForumDialogRow) {
+	padding: margins(20px, 6px, 16px, 6px);
+	nameLeft: 72px;
+	textLeft: 72px;
 }
 communityInfoRequestableListItem: PeerListItem(communityRequestableListItem) {
 	photoPosition: point(22px, 8px);     // == st::communityInfoDialogRow.padding left/top (22,8)
@@ -618,6 +667,12 @@ forumTopicRow: DialogRow(defaultDialogRow) {
 	textLeft: 39px;
 	textTop: 29px;
 	unreadMarkDiameter: 8px;
+}
+compactForumTopicRow: DialogRow(forumTopicRow) {
+	height: 48px;
+	padding: margins(8px, 4px, 8px, 4px);
+	nameTop: 4px;
+	textTop: 25px;
 }
 forumTopicIconPosition: point(2px, 0px);
 editTopicTitleMargin: margins(70px, 2px, 22px, 18px);

@@ -1850,6 +1850,21 @@ Cache::Database::Settings Account::cacheSettings() const {
 	return result;
 }
 
+QString Account::localArchivePath() const {
+	Expects(!_databasePath.isEmpty());
+
+	return _databasePath + "local_archive";
+}
+
+Cache::Database::Settings Account::localArchiveSettings() const {
+	auto result = Cache::Database::Settings();
+	result.clearOnWrongKey = true;
+	result.trackEstimatedTime = false;
+	result.totalSizeLimit = 0;
+	result.totalTimeLimit = 0;
+	return result;
+}
+
 void Account::updateCacheSettings(
 		Cache::Database::SettingsUpdate &update,
 		Cache::Database::SettingsUpdate &updateBig) {
@@ -3841,6 +3856,19 @@ std::optional<bool> Account::readPrefImpl<bool>(std::string_view key) {
 template <>
 void Account::writePrefImpl<bool>(std::string_view key, bool value) {
 	writePrefGeneric(key, value ? "\x1"_q : QByteArray());
+}
+
+template <>
+std::optional<QByteArray> Account::readPrefImpl<QByteArray>(
+		std::string_view key) {
+	return readPrefGeneric(key);
+}
+
+template <>
+void Account::writePrefImpl<QByteArray>(
+		std::string_view key,
+		QByteArray value) {
+	writePrefGeneric(key, value);
 }
 
 } // namespace Storage

@@ -54,6 +54,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_changes.h"
 #include "data/data_group_call.h"
 #include "data/data_folder.h"
+#include "data/data_local_archive.h"
+#include "data/data_local_bookmarks.h"
 #include "data/data_channel.h"
 #include "data/data_chat.h"
 #include "data/data_user.h"
@@ -266,7 +268,9 @@ Session::Session(not_null<Main::Session*> session)
 , _savedMessages(std::make_unique<SavedMessages>(this))
 , _chatbots(std::make_unique<Chatbots>(this))
 , _businessInfo(std::make_unique<BusinessInfo>(this))
-, _shortcutMessages(std::make_unique<ShortcutMessages>(this)) {
+, _shortcutMessages(std::make_unique<ShortcutMessages>(this))
+, _localArchive(std::make_unique<LocalArchive>(session))
+, _localBookmarks(std::make_unique<LocalBookmarks>(session)) {
 	_cache->open(_session->local().cacheKey());
 	_bigFileCache->open(_session->local().cacheBigFileKey());
 
@@ -2896,6 +2900,35 @@ void Session::updateEditedMessage(const MTPMessage &data) {
 		return message(peerFromMTP(data.vpeer_id()), data.vid().v);
 	});
 	if (!existing) {
+		data.match([](const MTPDmessageEmpty &) {
+		}, [](const MTPDmessageService &) {
+		}, [&](const MTPDmessage &message) {
+			const auto id = FullMsgId(
+				peerFromMTP(message.vpeer_id()),
+				message.vid().v);
+			const auto media = message.vmedia();
+			const auto expiringMedia = media && media->match([](
+					const MTPDmessageMediaPhoto &data) {
+				return data.vttl_seconds() != nullptr;
+			}, [](const MTPDmessageMediaDocument &data) {
+				return data.vttl_seconds() != nullptr;
+			}, [](const auto &) {
+				return false;
+			});
+			const auto period = message.vttl_period();
+			if (message.is_noforwards()
+				|| (period && period->v > 0)
+				|| expiringMedia) {
+				localArchive().forget(id);
+				localBookmarks().remove(id);
+			} else {
+				localArchive().recordEdit(
+					id,
+					qs(message.vmessage()),
+					message.vedit_date().value_or_empty());
+				localBookmarks().recordEdit(id, qs(message.vmessage()));
+			}
+		});
 		Reactions::CheckUnknownForUnread(this, data);
 		return;
 	}
@@ -3099,6 +3132,10 @@ void Session::checkFormattedDateUpdates() {
 void Session::processMessagesDeleted(
 		PeerId peerId,
 		const QVector<MTPint> &data) {
+	for (const auto &messageId : data) {
+		localArchive().markDeleted(peerId, messageId.v);
+		localBookmarks().markDeleted(peerId, messageId.v);
+	}
 	const auto list = messagesList(peerId);
 	const auto affected = historyLoaded(peerId);
 	if (!list && !affected) {
@@ -3131,6 +3168,10 @@ void Session::processMessagesDeleted(
 }
 
 void Session::processNonChannelMessagesDeleted(const QVector<MTPint> &data) {
+	for (const auto &messageId : data) {
+		localArchive().markNonChannelDeleted(messageId.v);
+		localBookmarks().markNonChannelDeleted(messageId.v);
+	}
 	auto toDestroy = std::vector<not_null<HistoryItem*>>();
 	auto historiesToCheck = base::flat_set<not_null<History*>>();
 	for (const auto &messageId : data) {
@@ -5824,6 +5865,8 @@ rpl::producer<RecentJoinChat> Session::recentJoinChat() const {
 }
 
 void Session::clearLocalStorage() {
+	_localArchive->clearStorage();
+	_localBookmarks->clear();
 	_cache->close();
 	_cache->clear();
 	_bigFileCache->close();

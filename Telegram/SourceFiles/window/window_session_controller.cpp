@@ -68,6 +68,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_web_page.h"
 #include "data/data_search_calendar.h"
 #include "dialogs/ui/chat_search_in.h"
+#include "dialogs/dialogs_row.h"
 #include "passport/passport_form_controller.h"
 #include "chat_helpers/tabbed_selector.h"
 #include "chat_helpers/emoji_interactions.h"
@@ -2584,9 +2585,10 @@ void SessionController::floatPlayerAreaUpdated() {
 }
 
 int SessionController::dialogsSmallColumnWidth() const {
-	return st::defaultDialogRow.padding.left()
-		+ st::defaultDialogRow.photoSize
-		+ st::defaultDialogRow.padding.left();
+	const auto &row = Dialogs::Row::DefaultSt();
+	return row.padding.left()
+		+ row.photoSize
+		+ row.padding.left();
 }
 
 int SessionController::minimalThreeColumnWidth() const {

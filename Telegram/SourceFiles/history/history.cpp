@@ -30,6 +30,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/stickers/data_stickers.h"
 #include "data/data_cloud_themes.h"
 #include "data/data_drafts.h"
+#include "data/data_local_archive.h"
+#include "data/data_local_bookmarks.h"
 #include "data/data_saved_messages.h"
 #include "data/data_saved_sublist.h"
 #include "data/data_session.h"
@@ -4354,6 +4356,10 @@ std::vector<MsgId> History::collectMessagesFromParticipantToDelete(
 }
 
 void History::clear(ClearType type, bool markEmpty) {
+	if (type == ClearType::ClearHistory) {
+		session().data().localArchive().markPeerDeleted(peer->id);
+		session().data().localBookmarks().markPeerDeleted(peer->id);
+	}
 	_unreadBarView = nullptr;
 	_firstUnreadView = nullptr;
 	removeJoinedMessage();

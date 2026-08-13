@@ -574,6 +574,8 @@ PRIVATE
     core/local_url_handlers.h
     core/phone_click_handler.cpp
     core/phone_click_handler.h
+    core/power_user_settings.cpp
+    core/power_user_settings.h
     core/sandbox.cpp
     core/sandbox.h
     core/shortcuts.cpp
@@ -699,6 +701,14 @@ PRIVATE
     data/data_history_messages.cpp
     data/data_history_messages.h
     data/data_lastseen_status.h
+    data/data_local_archive.cpp
+    data/data_local_archive.h
+    data/data_local_archive_codec.cpp
+    data/data_local_archive_codec.h
+    data/data_local_bookmarks.cpp
+    data/data_local_bookmarks.h
+    data/data_local_bookmarks_codec.cpp
+    data/data_local_bookmarks_codec.h
     data/data_location.cpp
     data/data_location.h
     data/data_media_preload.cpp
@@ -1794,6 +1804,8 @@ PRIVATE
     settings/sections/settings_information.h
     settings/settings_intro.cpp
     settings/settings_intro.h
+    settings/sections/settings_local_archive.cpp
+    settings/sections/settings_local_archive.h
     settings/sections/settings_local_passcode.cpp
     settings/sections/settings_local_passcode.h
     settings/sections/settings_local_storage.cpp
@@ -1808,8 +1820,12 @@ PRIVATE
     settings/settings_faq_suggestions.h
     settings/settings_builder.cpp
     settings/settings_builder.h
+    settings/settings_modern_ui.cpp
+    settings/settings_modern_ui.h
     settings/sections/settings_notifications.cpp
     settings/sections/settings_notifications.h
+    settings/sections/settings_power_user.cpp
+    settings/sections/settings_power_user.h
     settings/sections/settings_privacy_security.cpp
     settings/sections/settings_privacy_security.h
     settings/sections/settings_notifications_reactions.cpp

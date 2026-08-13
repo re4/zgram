@@ -26,7 +26,15 @@ namespace {
 [[nodiscard]] const style::DialogRow &ComputeCommunityInfoSt(
 		not_null<const Row*> row) {
 	const auto &base = Row::ComputeSt(row->entry(), FilterId());
-	if (&base == &st::taggedForumDialogRow) {
+	if (&base == &st::compactTaggedForumDialogRow) {
+		return st::compactCommunityInfoTaggedForumDialogRow;
+	} else if (&base == &st::compactForumDialogRow) {
+		return st::compactCommunityInfoForumDialogRow;
+	} else if (&base == &st::compactTaggedDialogRow) {
+		return st::compactCommunityInfoTaggedDialogRow;
+	} else if (&base == &st::compactDialogRow) {
+		return st::compactCommunityInfoDialogRow;
+	} else if (&base == &st::taggedForumDialogRow) {
 		return st::communityInfoTaggedForumDialogRow;
 	} else if (&base == &st::forumDialogRow) {
 		return st::communityInfoForumDialogRow;

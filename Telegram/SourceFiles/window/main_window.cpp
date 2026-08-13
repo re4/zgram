@@ -21,14 +21,17 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_account.h" // Account::sessionValue.
 #include "main/main_domain.h"
 #include "core/application.h"
+#include "core/power_user_settings.h"
 #include "core/sandbox.h"
 #include "core/shortcuts.h"
 #include "lang/lang_keys.h"
 #include "data/data_session.h"
 #include "data/data_forum_topic.h"
 #include "data/data_user.h"
+#include "dialogs/dialogs_row.h"
 #include "main/main_session.h"
 #include "main/main_session_settings.h"
+#include "settings/sections/settings_power_user.h"
 #include "base/options.h"
 #include "base/crc32hash.h"
 #include "ui/boxes/confirm_box.h"
@@ -64,9 +67,10 @@ constexpr auto kSaveWindowPositionTimeout = crl::time(1000);
 using Core::WindowPosition;
 
 [[nodiscard]] QPoint ChildSkip() {
-	const auto skipx = st::defaultDialogRow.padding.left()
-		+ st::defaultDialogRow.photoSize
-		+ st::defaultDialogRow.padding.left();
+	const auto &row = Dialogs::Row::DefaultSt();
+	const auto skipx = row.padding.left()
+		+ row.photoSize
+		+ row.padding.left();
 	const auto skipy = st::windowTitleHeight;
 	return { skipx, skipy };
 }
@@ -398,6 +402,11 @@ MainWindow::MainWindow(not_null<Controller*> controller)
 	}));
 }))
 , _body(body()) {
+	PowerUser::TransparencyValue(
+	) | rpl::on_next([=](PowerUser::TransparencyMode mode) {
+		setWindowOpacity(PowerUser::WindowOpacity(mode));
+	}, lifetime());
+
 	style::PaletteChanged(
 	) | rpl::on_next([=] {
 		updatePalette();
@@ -456,6 +465,22 @@ MainWindow::MainWindow(not_null<Controller*> controller)
 	}
 
 	Shortcuts::Listen(this);
+	Shortcuts::Requests(
+	) | rpl::on_next([=](not_null<Shortcuts::Request*> request) {
+		if (!isActive()) {
+			return;
+		}
+		request->check(
+			Shortcuts::Command::CommandPalette,
+			3
+		) && request->handle([=] {
+			if (const auto controller = sessionController()) {
+				Settings::ShowCommandPalette(controller);
+				return true;
+			}
+			return false;
+		});
+	}, lifetime());
 }
 
 Main::Account &MainWindow::account() const {

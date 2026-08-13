@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/call_delayed.h"
 #include "menu/menu_check_item.h"
 #include "boxes/about_box.h"
+#include "boxes/background_box.h"
 #include "boxes/share_box.h"
 #include "boxes/star_gift_box.h"
 #include "chat_helpers/compose/compose_show.h"
@@ -84,6 +85,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_session_controller.h"
 #include "window/window_controller.h"
 #include "settings/sections/settings_advanced.h"
+#include "settings/sections/settings_local_archive.h"
 #include "settings/sections/settings_premium.h"
 #include "settings/settings_common.h"
 #include "support/support_helper.h"
@@ -100,6 +102,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/notify/data_notify_settings.h"
 #include "data/stickers/data_custom_emoji.h"
 #include "data/data_changes.h"
+#include "data/data_local_archive.h"
 #include "data/data_session.h"
 #include "data/data_folder.h"
 #include "data/data_poll.h"
@@ -114,6 +117,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_histories.h"
 #include "data/data_chat_filters.h"
 #include "data/data_peer_values.h"
+#include "storage/storage_shared_media.h"
 #include "dialogs/dialogs_key.h"
 #include "core/application.h"
 #include "core/ui_integration.h"
@@ -267,7 +271,7 @@ void PeerMenuAddMuteSubmenuAction(
 			.icon = (notifySettings->sound(thread).none
 				? &st::menuIconSilent
 				: &st::menuIconMute),
-			.fillSubmenu = [&](not_null<Ui::PopupMenu*> menu) {
+			.fillSubmenu = [=](not_null<Ui::PopupMenu*> menu) {
 				MuteMenu::FillMuteMenu(menu, thread, show);
 			},
 		});
@@ -307,6 +311,8 @@ private:
 	void addToggleFolder();
 	void addToggleUnreadMark();
 	void addToggleArchive();
+	void addChatProfile();
+	void addLocalArchive();
 	void addClearHistory();
 	void addDeleteChat();
 	void addLeaveChat();
@@ -849,6 +855,108 @@ void Filler::addToggleArchive() {
 		Data::HistoryUpdate::Flag::Folder
 	) | rpl::map(label);
 	SetActionText(archiveAction, std::move(actionText));
+}
+
+void Filler::addLocalArchive() {
+	if (!_peer) {
+		return;
+	}
+	const auto peer = not_null<PeerData*>(_peer);
+	const auto archive = &peer->owner().localArchive();
+	if (!archive->eligible(peer)) {
+		return;
+	}
+	const auto controller = _controller;
+	_addAction(tr::lng_local_archive_menu(tr::now), [=] {
+		Settings::ShowLocalArchiveRetention(controller, peer);
+	}, &st::menuIconGroupLog);
+	const auto hasEntries = archive->hasEntries(peer->id);
+	if (hasEntries) {
+		_addAction(tr::lng_local_archive_view(tr::now), [=] {
+			Settings::ShowLocalArchive(controller, peer->id);
+		}, &st::menuIconArchive);
+	}
+	const auto clearAction = _addAction(PeerMenuCallback::Args{
+		.text = tr::lng_local_archive_clear(tr::now),
+		.handler = [=] {
+			controller->show(Ui::MakeConfirmBox({
+				.text = tr::lng_local_archive_clear_sure(
+					tr::now,
+					lt_name,
+					tr::bold(peer->name()),
+					tr::rich),
+				.confirmed = [=] { archive->clear(peer->id); },
+				.confirmText = tr::lng_local_archive_clear(),
+				.confirmStyle = &st::attentionBoxButton,
+			}));
+		},
+		.icon = &st::menuIconDeleteAttention,
+		.isAttention = true,
+	});
+	clearAction->setEnabled(hasEntries);
+}
+
+void Filler::addChatProfile() {
+	if (!_peer || !_thread) {
+		return;
+	}
+	const auto controller = _controller;
+	const auto thread = not_null<Data::Thread*>(_thread);
+	const auto peer = not_null<PeerData*>(_peer);
+	_addAction(PeerMenuCallback::Args{
+		.text = tr::lng_power_user_chat_profile(tr::now),
+		.handler = nullptr,
+		.icon = &st::menuIconSettings,
+		.fillSubmenu = [=](not_null<Ui::PopupMenu*> menu) {
+			const auto add = Ui::Menu::CreateAddActionCallback(menu);
+			PeerMenuAddMuteSubmenuAction(controller, thread, add);
+			add(
+				tr::lng_power_user_chat_appearance(tr::now),
+				[=] {
+					controller->show(Box<BackgroundBox>(controller, peer));
+				},
+				&st::menuIconChangeColors);
+			add(PeerMenuCallback::Args{
+				.text = tr::lng_power_user_media_gallery(tr::now),
+				.handler = nullptr,
+				.icon = &st::menuIconPhoto,
+				.fillSubmenu = [=](not_null<Ui::PopupMenu*> mediaMenu) {
+					const auto open = [=](Storage::SharedMediaType type) {
+						controller->showSection(
+							std::make_shared<Info::Memento>(
+								peer,
+								Info::Section(type)));
+					};
+					mediaMenu->addAction(
+						tr::lng_media_type_photos(tr::now),
+						[=] { open(Storage::SharedMediaType::Photo); },
+						&st::menuIconPhoto);
+					mediaMenu->addAction(
+						tr::lng_media_type_videos(tr::now),
+						[=] { open(Storage::SharedMediaType::Video); },
+						&st::menuIconPhoto);
+					mediaMenu->addAction(
+						tr::lng_media_type_files(tr::now),
+						[=] { open(Storage::SharedMediaType::File); },
+						&st::menuIconFile);
+					mediaMenu->addAction(
+						tr::lng_media_type_links(tr::now),
+						[=] { open(Storage::SharedMediaType::Link); },
+						&st::menuIconLinks);
+					mediaMenu->addAction(
+						tr::lng_media_type_songs(tr::now),
+						[=] { open(Storage::SharedMediaType::MusicFile); },
+						&st::menuIconFile);
+					mediaMenu->addAction(
+						tr::lng_media_type_audios(tr::now),
+						[=] {
+							open(Storage::SharedMediaType::RoundVoiceFile);
+						},
+						&st::menuIconChatBubble);
+				},
+			});
+		},
+	});
 }
 
 void Filler::addClearHistory() {
@@ -1854,11 +1962,13 @@ void Filler::fillContextMenuActions() {
 	addToggleUnreadMark();
 	addToggleTopicClosed();
 	addToggleFolder();
+	addChatProfile();
 	if (const auto user = _peer->asUser()) {
 		if (!user->isContact()) {
 			addBlockUser();
 		}
 	}
+	addLocalArchive();
 	addClearHistory();
 	addDeleteChat();
 	addLeaveChat();
@@ -1883,6 +1993,8 @@ void Filler::fillHistoryActions() {
 	addExportChat();
 	addTranslate();
 	addReport();
+	addChatProfile();
+	addLocalArchive();
 	addClearHistory();
 	addDeleteChat();
 	addLeaveChat();
@@ -1909,6 +2021,8 @@ void Filler::fillProfileActions() {
 	addExportChat();
 	addToggleNoForwards();
 	addToggleFolder();
+	addChatProfile();
+	addLocalArchive();
 	addBlockUser();
 	addReport();
 	addLeaveChat();

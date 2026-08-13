@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/options.h"
 #include "base/unixtime.h"
 #include "core/ui_integration.h"
+#include "data/stickers/data_custom_emoji.h"
 #include "data/data_channel.h"
 #include "data/data_drafts.h"
 #include "data/data_folder.h"
@@ -19,30 +20,30 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_thread.h"
 #include "data/data_user.h"
-#include "data/stickers/data_custom_emoji.h"
-#include "dialogs/dialogs_list.h"
-#include "dialogs/dialogs_three_state_icon.h"
-#include "dialogs/dialogs_quick_action.h"
 #include "dialogs/ui/dialogs_video_userpic.h"
+#include "dialogs/dialogs_list.h"
+#include "dialogs/dialogs_quick_action.h"
+#include "dialogs/dialogs_row.h"
+#include "dialogs/dialogs_three_state_icon.h"
+#include "history/view/history_view_item_preview.h"
+#include "history/view/history_view_send_action.h"
 #include "history/history.h"
 #include "history/history_item.h"
 #include "history/history_item_components.h"
 #include "history/history_item_helpers.h"
 #include "history/history_unread_things.h"
-#include "history/view/history_view_item_preview.h"
-#include "history/view/history_view_send_action.h"
 #include "lang/lang_keys.h"
 #include "lottie/lottie_icon.h"
 #include "main/main_session.h"
 #include "storage/localstorage.h"
 #include "support/support_helper.h"
-#include "ui/empty_userpic.h"
-#include "ui/painter.h"
-#include "ui/rect.h"
-#include "ui/power_saving.h"
 #include "ui/text/format_values.h"
 #include "ui/text/text_options.h"
 #include "ui/text/text_utilities.h"
+#include "ui/empty_userpic.h"
+#include "ui/painter.h"
+#include "ui/power_saving.h"
+#include "ui/rect.h"
 #include "ui/unread_badge.h"
 #include "ui/unread_badge_paint.h"
 #include "ui/unread_counter_format.h"
@@ -50,6 +51,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_dialogs_layout.h"
 #include "styles/style_widgets.h"
 #include "styles/style_window.h"
+
+#include <QtGui/QPainterPath>
 
 namespace Dialogs::Ui {
 
@@ -288,15 +291,16 @@ int PaintBadges(
 void PaintExpandedTopicsBar(QPainter &p, float64 progress) {
 	auto hq = PainterHighQualityEnabler(p);
 	const auto radius = st::roundRadiusLarge;
-	const auto width = st::forumDialogRow.padding.left() / 2;
+	const auto &row = Dialogs::Row::ForumSt();
+	const auto width = row.padding.left() / 2;
 	p.setPen(Qt::NoPen);
 	p.setBrush(st::dialogsBgActive);
 	p.drawRoundedRect(
 		QRectF(
 			-3. * radius - width * (1. - progress),
-			st::forumDialogRow.padding.top(),
+			row.padding.top(),
 			3. * radius + width,
-			st::forumDialogRow.photoSize),
+			row.photoSize),
 		radius,
 		radius);
 }
@@ -465,11 +469,6 @@ void PaintRow(
 	const auto thread = entry->asThread();
 	const auto sublist = entry->asSublist();
 
-	auto bg = context.active
-		? st::dialogsBgActive
-		: context.selected
-		? st::dialogsBgOver
-		: context.currentBg;
 	auto swipeTranslation = 0;
 	if (history
 		&& context.quickActionContext
@@ -484,12 +483,45 @@ void PaintRow(
 	if (swipeTranslation) {
 		p.translate(-swipeTranslation, 0);
 	}
-	p.fillRect(geometry, bg);
+	p.fillRect(geometry, context.currentBg);
+	const auto surface = geometry.marginsRemoved(
+		st::dialogsModernRowMargin);
+	if (context.active || context.selected) {
+		p.setRenderHint(QPainter::Antialiasing);
+		p.setPen(Qt::NoPen);
+		p.setBrush(context.active
+			? st::dialogsBgActive
+			: st::dialogsBgOver);
+		p.drawRoundedRect(
+			surface,
+			st::dialogsModernRowRadius,
+			st::dialogsModernRowRadius);
+		if (context.active) {
+			auto border = st::windowActiveTextFg->c;
+			border.setAlphaF(
+				border.alphaF() * st::dialogsModernRowBorderOpacity);
+			const auto inset = st::dialogsModernRowBorder / 2.;
+			p.setBrush(Qt::NoBrush);
+			p.setPen(QPen(border, st::dialogsModernRowBorder));
+			p.drawRoundedRect(
+				QRectF(surface).adjusted(inset, inset, -inset, -inset),
+				st::dialogsModernRowRadius,
+				st::dialogsModernRowRadius);
+		}
+	}
 	if (!(flags & Flag::TopicJumpRipple)) {
 		auto ripple = context.active
 			? st::dialogsRippleBgActive
 			: st::dialogsRippleBg;
+		p.save();
+		auto clip = QPainterPath();
+		clip.addRoundedRect(
+			surface,
+			st::dialogsModernRowRadius,
+			st::dialogsModernRowRadius);
+		p.setClipPath(clip, Qt::IntersectClip);
 		row->paintRipple(p, 0, 0, context.width, &ripple->c);
+		p.restore();
 	}
 
 	if (flags & Flag::SavedMessages) {
@@ -1074,7 +1106,7 @@ void PaintRow(
 
 const style::icon *ChatTypeIcon(not_null<PeerData*> peer) {
 	return ChatTypeIcon(peer, {
-		.st = &st::defaultDialogRow,
+		.st = &Dialogs::Row::DefaultSt(),
 		.currentBg = st::windowBg,
 	});
 }

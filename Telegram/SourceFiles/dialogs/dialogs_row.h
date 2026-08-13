@@ -91,6 +91,11 @@ public:
 	[[nodiscard]] static const style::DialogRow &ComputeSt(
 		not_null<const Entry*> entry,
 		FilterId filterId);
+	[[nodiscard]] static const style::DialogRow &DefaultSt();
+	[[nodiscard]] static const style::DialogRow &TaggedSt();
+	[[nodiscard]] static const style::DialogRow &ForumSt();
+	[[nodiscard]] static const style::DialogRow &TaggedForumSt();
+	[[nodiscard]] static const style::DialogRow &ForumTopicSt();
 
 	[[nodiscard]] int top() const {
 		return _top;

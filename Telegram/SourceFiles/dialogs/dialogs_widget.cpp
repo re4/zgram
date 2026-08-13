@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "dialogs/dialogs_widget.h"
 
+#include "dialogs/dialogs_row.h"
 #include "base/call_delayed.h"
 #include "base/qt/qt_key_modifiers.h"
 #include "base/options.h"
@@ -397,9 +398,9 @@ Widget::Widget(
 , _api(&controller->session().mtp())
 , _chooseByDragTimer([=] { _inner->chooseRow(); })
 , _layout(layout)
-, _narrowWidth(st::defaultDialogRow.padding.left()
-	+ st::defaultDialogRow.photoSize
-	+ st::defaultDialogRow.padding.left())
+, _narrowWidth(Row::DefaultSt().padding.left()
+	+ Row::DefaultSt().photoSize
+	+ Row::DefaultSt().padding.left())
 , _searchControls(this)
 , _mainMenu({
 	.toggle = object_ptr<Ui::IconButton>(
@@ -1449,8 +1450,8 @@ void Widget::updateCommunityAddChatButton() {
 		const auto buttonWidth = buttonHeight
 			+ st::communityAddChatNarrowAddedWidth;
 		const auto stripHeight = buttonHeight
-			+ st::defaultDialogRow.padding.top()
-			+ st::defaultDialogRow.padding.bottom();
+			+ Row::DefaultSt().padding.top()
+			+ Row::DefaultSt().padding.bottom();
 		if (!shown) {
 			raw->toggle(false, anim::type::instant);
 			narrowButton->hide();
@@ -1461,7 +1462,7 @@ void Widget::updateCommunityAddChatButton() {
 			raw->toggle(false, anim::type::instant);
 			narrowButton->moveToLeft(
 				(_scroll->width() - buttonWidth) / 2,
-				bottom + st::defaultDialogRow.padding.top());
+				bottom + Row::DefaultSt().padding.top());
 			narrowButton->show();
 		} else {
 			narrowButton->hide();
@@ -1762,7 +1763,7 @@ void Widget::setupStories() {
 		if (position.overscroll > 0
 			|| (position.value
 				> (_storiesExplicitExpandScrollTop
-					+ st::dialogsRowHeight))) {
+					+ Row::DefaultSt().height))) {
 			storiesToggleExplicitExpand(false);
 		}
 		updateLockUnlockPosition();

@@ -112,6 +112,8 @@ public:
 	[[nodiscard]] EncryptionKey cacheKey() const;
 	[[nodiscard]] QString cachePath() const;
 	[[nodiscard]] Cache::Database::Settings cacheSettings() const;
+	[[nodiscard]] QString localArchivePath() const;
+	[[nodiscard]] Cache::Database::Settings localArchiveSettings() const;
 	void updateCacheSettings(
 		Cache::Database::SettingsUpdate &update,
 		Cache::Database::SettingsUpdate &updateBig);

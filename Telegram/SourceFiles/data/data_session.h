@@ -53,6 +53,8 @@ namespace Data {
 
 class Folder;
 class LocationPoint;
+class LocalArchive;
+class LocalBookmarks;
 class WallPaper;
 class ShortcutMessages;
 class SendActionManager;
@@ -194,6 +196,12 @@ public:
 	}
 	[[nodiscard]] ShortcutMessages &shortcutMessages() const {
 		return *_shortcutMessages;
+	}
+	[[nodiscard]] LocalArchive &localArchive() const {
+		return *_localArchive;
+	}
+	[[nodiscard]] LocalBookmarks &localBookmarks() const {
+		return *_localBookmarks;
 	}
 	[[nodiscard]] SendActionManager &sendActionManager() const {
 		return *_sendActionManager;
@@ -1409,6 +1417,8 @@ private:
 	const std::unique_ptr<Chatbots> _chatbots;
 	const std::unique_ptr<BusinessInfo> _businessInfo;
 	std::unique_ptr<ShortcutMessages> _shortcutMessages;
+	const std::unique_ptr<LocalArchive> _localArchive;
+	const std::unique_ptr<LocalBookmarks> _localBookmarks;
 
 	MsgId _nonHistoryEntryId = ShortcutMaxMsgId;
 

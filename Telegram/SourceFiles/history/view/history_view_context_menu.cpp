@@ -86,6 +86,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_channel.h"
 #include "data/data_chat.h"
 #include "data/data_file_click_handler.h"
+#include "data/data_local_bookmarks.h"
 #include "data/data_message_reactions.h"
 #include "data/data_user.h"
 #include "data/stickers/data_custom_emoji.h"
@@ -1015,6 +1016,32 @@ void AddSaveRichHtmlAction(
 		list);
 }
 
+void AddLocalBookmarkAction(
+		not_null<Ui::PopupMenu*> menu,
+		const ContextMenuRequest &request) {
+	const auto item = request.item;
+	if (!item || !request.selectedItems.empty()) {
+		return;
+	}
+	const auto owner = &item->history()->owner();
+	const auto bookmarks = &owner->localBookmarks();
+	if (!bookmarks->eligible(item)) {
+		return;
+	}
+	const auto id = item->fullId();
+	const auto saved = bookmarks->contains(id);
+	menu->addAction(
+		saved
+			? tr::lng_local_bookmark_remove(tr::now)
+			: tr::lng_local_bookmark_add(tr::now),
+		[=] {
+			if (const auto current = owner->message(id)) {
+				bookmarks->toggle(current);
+			}
+		},
+		saved ? &st::menuIconUnfave : &st::menuIconFave);
+}
+
 void AddReportAction(
 		not_null<Ui::PopupMenu*> menu,
 		const ContextMenuRequest &request,
@@ -1125,6 +1152,7 @@ void AddMessageActions(
 	AddDeleteAction(menu, request, list);
 	AddDownloadFilesAction(menu, request, list);
 	AddSaveRichHtmlAction(menu, request, list);
+	AddLocalBookmarkAction(menu, request);
 	AddReportAction(menu, request, list);
 	if (request.item && request.selectedItems.empty()) {
 		AddEphemeralMessageActions(

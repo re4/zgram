@@ -7,6 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #pragma once
 
+#include <rpl/producer.h>
+
 namespace Ui {
 
 [[nodiscard]] int BubbleRadiusSmall();
@@ -14,6 +16,10 @@ namespace Ui {
 
 [[nodiscard]] int MsgFileThumbRadiusSmall();
 [[nodiscard]] int MsgFileThumbRadiusLarge();
+
+[[nodiscard]] bool UseSmallBubbleRadius();
+void SetUseSmallBubbleRadius(bool value);
+[[nodiscard]] rpl::producer<bool> UseSmallBubbleRadiusValue();
 
 extern const char kOptionUseSmallMsgBubbleRadius[];
 

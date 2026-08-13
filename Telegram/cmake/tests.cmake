@@ -53,3 +53,32 @@ if (APPLE)
             "$<TARGET_FILE_DIR:test_text>/Contents/Resources/"
     )
 endif()
+
+add_executable(test_local_archive)
+init_target(test_local_archive "(tests)")
+
+target_include_directories(test_local_archive PRIVATE ${src_loc})
+
+nice_target_sources(test_local_archive ${src_loc}
+PRIVATE
+    data/data_local_archive_codec.cpp
+    data/data_local_archive_codec.h
+    data/data_local_bookmarks_codec.cpp
+    data/data_local_bookmarks_codec.h
+    tests/test_local_archive.cpp
+)
+
+target_link_libraries(test_local_archive
+PRIVATE
+    desktop-app::lib_base
+    desktop-app::lib_storage
+    desktop-app::external_qt
+)
+
+set_target_properties(test_local_archive PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_dependencies(Telegram test_local_archive)
+
+enable_testing()
+add_test(NAME test_local_archive COMMAND test_local_archive)

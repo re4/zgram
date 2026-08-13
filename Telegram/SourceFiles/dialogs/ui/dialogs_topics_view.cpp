@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_saved_sublist.h"
 #include "data/data_session.h"
 #include "core/ui_integration.h"
+#include "dialogs/dialogs_row.h"
 #include "lang/lang_keys.h"
 #include "main/main_session.h"
 #include "ui/painter.h"
@@ -298,7 +299,7 @@ void TopicsView::paintRipple(
 
 QImage TopicsView::topicJumpRippleMask(
 		not_null<TopicJumpCache*> topicJumpCache) const {
-	const auto &st = st::forumDialogRow;
+	const auto &st = Dialogs::Row::ForumSt();
 	const auto area1 = _lastTopicJumpGeometry.area1;
 	if (area1.isEmpty()) {
 		return QImage();

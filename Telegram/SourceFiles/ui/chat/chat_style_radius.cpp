@@ -58,4 +58,18 @@ int MsgFileThumbRadiusLarge() {
 	return result;
 }
 
+bool UseSmallBubbleRadius() {
+	return UseSmallMsgBubbleRadius.value();
 }
+
+void SetUseSmallBubbleRadius(bool value) {
+	UseSmallMsgBubbleRadius.set(value);
+}
+
+rpl::producer<bool> UseSmallBubbleRadiusValue() {
+	return rpl::single(UseSmallBubbleRadius()) | rpl::then(
+		UseSmallMsgBubbleRadius.changes(
+		) | rpl::map([] { return UseSmallBubbleRadius(); }));
+}
+
+} // namespace Ui

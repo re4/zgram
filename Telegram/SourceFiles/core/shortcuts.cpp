@@ -85,6 +85,7 @@ const auto CommandByName = base::flat_map<QString, Command>{
 	{ u"media_next"_q        , Command::MediaNext },
 
 	{ u"search"_q            , Command::Search },
+	{ u"command_palette"_q   , Command::CommandPalette },
 
 	{ u"previous_chat"_q     , Command::ChatPrevious },
 	{ u"next_chat"_q         , Command::ChatNext },
@@ -489,6 +490,7 @@ void Manager::fillDefaults() {
 	set(u"ctrl+f"_q, Command::Search);
 	set(u"search"_q, Command::Search);
 	set(u"find"_q, Command::Search);
+	set(u"ctrl+k"_q, Command::CommandPalette);
 
 	set(u"ctrl+pgdown"_q, Command::ChatNext);
 	set(u"alt+down"_q, Command::ChatNext);

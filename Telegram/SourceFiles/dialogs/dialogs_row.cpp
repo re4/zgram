@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "dialogs/dialogs_row.h"
 
+#include "core/power_user_settings.h"
 #include "ui/chat/chat_theme.h" // CountAverageColor.
 #include "ui/color_contrast.h"
 #include "ui/effects/credits_graphics.h"
@@ -45,6 +46,12 @@ constexpr auto kHiddenLayer = 2;
 constexpr auto kBottomLayer = 1;
 constexpr auto kNoneLayer = 0;
 constexpr auto kBlurRadius = 24;
+
+[[nodiscard]] bool CompactLayout() {
+	static const auto result = PowerUser::Layout()
+		== PowerUser::LayoutMode::Compact;
+	return result;
+}
 
 [[nodiscard]] const QPainterPath &SubscriptionOutlinePath() {
 	static auto path = QPainterPath();
@@ -348,23 +355,54 @@ const style::DialogRow &Row::ComputeSt(
 		const auto wideRow = history->peer->displayAsForum()
 			|| history->amMonoforumAdmin();
 		return wideRow
-			? (hasTags ? st::taggedForumDialogRow : st::forumDialogRow)
+			? (hasTags ? TaggedForumSt() : ForumSt())
 			: hasTags
-			? st::taggedDialogRow
-			: st::defaultDialogRow;
+			? TaggedSt()
+			: DefaultSt();
 	} else if (entry->asTopic()) {
-		return st::forumTopicRow;
+		return ForumTopicSt();
 	}
-	return st::defaultDialogRow;
+	return DefaultSt();
+}
+
+const style::DialogRow &Row::DefaultSt() {
+	return CompactLayout()
+		? st::compactDialogRow
+		: st::defaultDialogRow;
+}
+
+const style::DialogRow &Row::TaggedSt() {
+	return CompactLayout()
+		? st::compactTaggedDialogRow
+		: st::taggedDialogRow;
+}
+
+const style::DialogRow &Row::ForumSt() {
+	return CompactLayout()
+		? st::compactForumDialogRow
+		: st::forumDialogRow;
+}
+
+const style::DialogRow &Row::TaggedForumSt() {
+	return CompactLayout()
+		? st::compactTaggedForumDialogRow
+		: st::taggedForumDialogRow;
+}
+
+const style::DialogRow &Row::ForumTopicSt() {
+	return CompactLayout()
+		? st::compactForumTopicRow
+		: st::forumTopicRow;
 }
 
 void Row::recountHeight(float64 narrowRatio, FilterId filterId) {
 	const auto &st = ComputeSt(_id.entry(), filterId);
-	_height = ((&st == &st::defaultDialogRow) || !_id.history())
-		? st::defaultDialogRow.height
+	const auto &normal = DefaultSt();
+	_height = ((&st == &normal) || !_id.history())
+		? normal.height
 		: anim::interpolate(
 			st.height,
-			st::defaultDialogRow.height,
+			normal.height,
 			narrowRatio);
 }
 

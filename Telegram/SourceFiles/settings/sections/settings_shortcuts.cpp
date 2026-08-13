@@ -64,6 +64,7 @@ struct Labeled {
 		{ C::Quit, tr::lng_shortcuts_quit() },
 		separator,
 		{ C::Search, tr::lng_shortcuts_search() },
+		{ C::CommandPalette, tr::lng_shortcuts_command_palette() },
 		separator,
 		{ C::ChatPrevious, tr::lng_shortcuts_chat_previous() },
 		{ C::ChatNext, tr::lng_shortcuts_chat_next() },

@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_user.h"
 #include "dialogs/dialogs_key.h"
+#include "dialogs/dialogs_row.h"
 #include "dialogs/dialogs_search_from_controllers.h" // SearchFromBox
 #include "dialogs/dialogs_search_tags.h"
 #include "dialogs/ui/dialogs_layout.h"
@@ -146,7 +147,7 @@ void ListController::rowClicked(not_null<PeerListRow*> row) {
 }
 
 int ListController::customRowHeight() {
-	return st::dialogsRowHeight;
+	return Dialogs::Row::DefaultSt().height;
 }
 
 void ListController::customRowPaint(
@@ -157,7 +158,7 @@ void ListController::customRowPaint(
 	const auto outerWidth = _content->width();
 	const auto fakeRow = static_cast<Row*>(row.get())->fakeRow();
 	Dialogs::Ui::RowPainter::Paint(p, fakeRow, {
-		.st = &st::defaultDialogRow,
+		.st = &Dialogs::Row::DefaultSt(),
 		.currentBg = st::dialogsBg,
 		.now = now,
 		.searchLowerText = QStringView(_query),
@@ -181,7 +182,7 @@ void ListController::customRowAddRipple(
 		Fn<void()> updateCallback) {
 	static_cast<Row*>(row.get())->fakeRow()->addRipple(
 		point,
-		QSize(_content->width(), st::dialogsRowHeight),
+		QSize(_content->width(), Dialogs::Row::DefaultSt().height),
 		std::move(updateCallback));
 }
 

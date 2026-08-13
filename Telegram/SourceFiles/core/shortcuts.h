@@ -26,6 +26,7 @@ enum class Command {
 	MediaNext,
 
 	Search,
+	CommandPalette,
 
 	ChatPrevious,
 	ChatNext,

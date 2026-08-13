@@ -38,6 +38,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mtproto/mtp_instance.h"
 #include "platform/platform_specific.h"
 #include "settings/settings_builder.h"
+#include "settings/sections/settings_local_archive.h"
 #include "settings/sections/settings_local_storage.h"
 #include "settings/sections/settings_main.h"
 #include "settings/sections/settings_chat.h"
@@ -174,6 +175,18 @@ void BuildDataStorageSection(SectionBuilder &builder) {
 			controller->showSettings(LocalStorageId());
 		},
 		.keywords = { u"storage"_q, u"cache"_q, u"local"_q },
+	});
+
+	builder.addSectionButton({
+		.title = tr::lng_local_archive_title(),
+		.targetSection = LocalArchiveId(),
+		.icon = { &st::menuIconGroupLog },
+		.keywords = {
+			u"archive"_q,
+			u"messages"_q,
+			u"logging"_q,
+			u"retention"_q,
+		},
 	});
 
 	builder.addButton({

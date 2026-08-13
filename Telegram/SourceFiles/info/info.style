@@ -908,6 +908,14 @@ topBarMenuGroupCallSkip: 20px;
 topBarBack: icon {{ "title_back", lightButtonFg }};
 topBarArrowPadding: margins(39px, 8px, 17px, 8px);
 topBarNameRightPadding: 3px;
+topBarLocalArchive: icon {{ "menu/group_log", windowActiveTextFg }};
+topBarLocalArchiveSkip: 4px;
+topBarLocalArchiveHeight: 20px;
+topBarLocalArchivePadding: margins(7px, 3px, 7px, 3px);
+topBarLocalArchiveIconSkip: 3px;
+topBarLocalArchiveRadius: 10px;
+topBarLocalArchiveFont: font(9px semibold);
+topBarLocalArchiveBgOpacity: 0.12;
 topBarClearButton: RoundButton(defaultLightButton) {
 	width: -18px;
 }

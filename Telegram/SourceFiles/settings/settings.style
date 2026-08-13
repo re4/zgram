@@ -49,6 +49,139 @@ settingsAttentionButtonWithIcon: SettingsButton(settingsButton) {
 	textFg: attentionButtonFg;
 	textFgOver: attentionButtonFgOver;
 }
+
+zgramPagePadding: margins(20px, 18px, 20px, 28px);
+zgramHeroMargin: margins(0px, 0px, 0px, 24px);
+zgramHeroPadding: margins(22px, 20px, 22px, 20px);
+zgramHeroRadius: 20px;
+zgramHeroBorder: 1px;
+zgramHeroIconSize: 48px;
+zgramHeroIconRadius: 15px;
+zgramHeroIconSkip: 16px;
+zgramHeroBadgeSkip: 10px;
+zgramHeroTitleSkip: 6px;
+zgramHeroAccentOpacity: 0.08;
+zgramHeroBorderOpacity: 0.22;
+zgramHeroTitle: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(21px semibold);
+		lineHeight: 25px;
+	}
+	textFg: windowFg;
+}
+zgramHeroAbout: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(13px);
+		lineHeight: 19px;
+	}
+	textFg: windowSubTextFg;
+}
+
+zgramSectionTitleMargin: margins(4px, 0px, 4px, 10px);
+zgramSectionTitleTop: margins(4px, 14px, 4px, 10px);
+zgramSectionTitle: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(12px semibold);
+		lineHeight: 16px;
+	}
+	textFg: windowSubTextFg;
+}
+
+zgramCardMargin: margins(0px, 0px, 0px, 10px);
+zgramCardPadding: margins(16px, 12px, 16px, 12px);
+zgramCardHeight: 72px;
+zgramCardRadius: 16px;
+zgramCardBorder: 1px;
+zgramCardIconSize: 40px;
+zgramCardIconRadius: 12px;
+zgramCardIconSkip: 14px;
+zgramCardTextSkip: 3px;
+zgramCardTrailingSkip: 12px;
+zgramCardToneOpacity: 0.08;
+zgramCardToneOverOpacity: 0.13;
+zgramCardBorderOpacity: 0.22;
+zgramCardTitle: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(14px semibold);
+		lineHeight: 18px;
+	}
+	textFg: windowFg;
+	maxHeight: 18px;
+}
+zgramCardDescription: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(12px);
+		lineHeight: 17px;
+	}
+	textFg: windowSubTextFg;
+	maxHeight: 17px;
+}
+zgramCardRipple: RippleAnimation(defaultRippleAnimation) {
+	color: windowBgRipple;
+}
+
+zgramPanelPadding: margins(16px, 14px, 16px, 14px);
+zgramPanelRadius: 16px;
+zgramPanelBorder: 1px;
+zgramPanelToneOpacity: 0.06;
+zgramPanelBorderOpacity: 0.18;
+
+zgramBadgeHeight: 22px;
+zgramBadgePadding: margins(9px, 3px, 9px, 3px);
+zgramBadgeFont: font(10px semibold);
+zgramBadgeToneOpacity: 0.13;
+
+zgramSearchField: InputField(defaultInputField) {
+	textBg: windowBgOver;
+	textBgActive: windowBgOver;
+	textMargins: margins(16px, 14px, 16px, 12px);
+	placeholderMargins: margins(16px, 0px, 16px, 0px);
+	placeholderScale: 1.;
+	placeholderShift: 0px;
+	placeholderFont: font(13px);
+	borderFg: windowBgRipple;
+	borderFgActive: windowActiveTextFg;
+	border: 1px;
+	borderActive: 1px;
+	borderRadius: 15px;
+	heightMin: 48px;
+	heightMax: 48px;
+}
+zgramSearchMargin: margins(16px, 12px, 16px, 12px);
+zgramBoxHeroMargin: margins(16px, 14px, 16px, 8px);
+zgramBoxSectionMargin: margins(16px, 8px, 16px, 8px);
+zgramBoxCardMargin: margins(16px, 0px, 16px, 10px);
+zgramBoxBottomMargin: margins(16px, 0px, 16px, 16px);
+
+zgramTimelineMeta: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(11px semibold);
+		lineHeight: 15px;
+	}
+	textFg: windowSubTextFg;
+}
+zgramTimelineBody: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(13px);
+		lineHeight: 19px;
+	}
+	textFg: windowFg;
+}
+zgramTimelineAttention: FlatLabel(zgramTimelineBody) {
+	textFg: attentionButtonFg;
+}
+zgramTimelineBadgeMargin: margins(0px, 0px, 0px, 8px);
+zgramTimelineMetaMargin: margins(0px, 0px, 0px, 8px);
+zgramTimelineStatusMargin: margins(0px, 0px, 0px, 10px);
+zgramTimelineBodyMargin: margins(0px, 0px, 0px, 0px);
+zgramHint: FlatLabel(defaultFlatLabel) {
+	style: TextStyle(defaultTextStyle) {
+		font: font(11px);
+		lineHeight: 16px;
+	}
+	textFg: windowSubTextFg;
+}
+zgramHintMargin: margins(18px, 0px, 18px, 12px);
 settingsExperimentalTitle: FlatLabel(defaultFlatLabel) {
 	minWidth: 100px;
 }

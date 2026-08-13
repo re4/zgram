@@ -47,6 +47,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_group_call.h" // GroupCall::input.
 #include "data/data_folder.h"
 #include "data/data_forum.h"
+#include "data/data_local_archive.h"
 #include "data/data_saved_messages.h"
 #include "data/data_saved_sublist.h"
 #include "data/data_session.h"
@@ -139,6 +140,11 @@ TopBarWidget::TopBarWidget(
 	Lang::Updated(
 	) | rpl::on_next([=] {
 		refreshLang();
+	}, lifetime());
+
+	session().data().localArchive().changes(
+	) | rpl::on_next([=] {
+		update();
 	}, lifetime());
 
 	_forward->setClickedCallback([=] { _forwardSelection.fire({}); });
@@ -655,6 +661,23 @@ void TopBarWidget::paintTopBar(Painter &p) {
 			nameleft += skip + st::dialogsChatTypeSkip;
 			namewidth -= skip + st::dialogsChatTypeSkip;
 		}
+		const auto archiveActive = peer
+			&& session().data().localArchive().enabled(peer->id);
+		const auto archiveText = archiveActive
+			? tr::lng_local_archive_indicator(tr::now)
+			: QString();
+		const auto archiveWidth = archiveActive
+			? st::topBarLocalArchivePadding.left()
+				+ st::topBarLocalArchive.width()
+				+ st::topBarLocalArchiveIconSkip
+				+ st::topBarLocalArchiveFont->width(archiveText)
+				+ st::topBarLocalArchivePadding.right()
+			: 0;
+		const auto archived = archiveActive
+			&& namewidth >= archiveWidth + st::topBarLocalArchiveSkip;
+		if (archived) {
+			namewidth -= archiveWidth + st::topBarLocalArchiveSkip;
+		}
 		const auto badgeWidth = _titleBadge.drawGetWidth(p, {
 			.peer = namePeer,
 			.rectForName = QRect(
@@ -683,6 +706,53 @@ void TopBarWidget::paintTopBar(Painter &p) {
 			.availableWidth = namewidth,
 			.elisionLines = 1,
 		});
+		if (archived) {
+			const auto titleWidth = std::min(_title.maxWidth(), namewidth);
+			const auto archiveLeft = nameleft
+				+ titleWidth
+				+ badgeWidth
+				+ st::topBarLocalArchiveSkip;
+			const auto archiveTop = nametop
+				+ (st::msgNameStyle.font->height
+					- st::topBarLocalArchiveHeight) / 2;
+			const auto archiveRect = style::rtlrect(
+				archiveLeft,
+				archiveTop,
+				archiveWidth,
+				st::topBarLocalArchiveHeight,
+				width());
+			auto archiveColor = st::windowActiveTextFg->c;
+			auto archiveBg = archiveColor;
+			archiveBg.setAlphaF(
+				archiveBg.alphaF() * st::topBarLocalArchiveBgOpacity);
+			p.setRenderHint(QPainter::Antialiasing);
+			p.setPen(Qt::NoPen);
+			p.setBrush(archiveBg);
+			p.drawRoundedRect(
+				archiveRect,
+				st::topBarLocalArchiveRadius,
+				st::topBarLocalArchiveRadius);
+			const auto iconRect = style::rtlrect(
+				archiveLeft + st::topBarLocalArchivePadding.left(),
+				archiveTop,
+				st::topBarLocalArchive.width(),
+				st::topBarLocalArchiveHeight,
+				width());
+			st::topBarLocalArchive.paintInCenter(
+				p,
+				iconRect,
+				archiveColor);
+			p.setFont(st::topBarLocalArchiveFont);
+			p.setPen(archiveColor);
+			p.drawTextLeft(
+				archiveLeft
+					+ st::topBarLocalArchivePadding.left()
+					+ st::topBarLocalArchive.width()
+					+ st::topBarLocalArchiveIconSkip,
+				archiveTop + st::topBarLocalArchivePadding.top(),
+				width(),
+				archiveText);
+		}
 
 		p.setFont(st::dialogsTextFont);
 		if (!paintConnectingState(p, statusleft, statustop, width())
