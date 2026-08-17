@@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "storage/cache/storage_cache_database.h"
 #include "storage/storage_account.h"
 #include "storage/storage_databases.h"
+#include "storage/storage_encryption.h"
 
 #include <rpl/event_stream.h>
 #include <rpl/variable.h>

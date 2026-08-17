@@ -8,9 +8,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "dialogs/ui/dialogs_top_bar_suggestion_content.h"
 
 #include "base/call_delayed.h"
+#include "core/power_user_settings.h"
 #include "data/data_authorization.h"
 #include "dialogs/ui/dialogs_pill.h"
-#include "dialogs/dialogs_row.h"
 #include "lang/lang_keys.h"
 #include "lottie/lottie_icon.h"
 #include "settings/settings_common.h"
@@ -41,6 +41,12 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 namespace Dialogs {
 namespace {
+
+[[nodiscard]] const style::DialogRow &DefaultDialogRowStyle() {
+	static const auto compact = PowerUser::Layout()
+		== PowerUser::LayoutMode::Compact;
+	return compact ? st::compactDialogRow : st::defaultDialogRow;
+}
 
 [[nodiscard]] QString FormatUnconfirmedAuthMessage(
 		const std::vector<Data::UnreviewedAuth> &list) {
@@ -643,7 +649,7 @@ int TopBarSuggestionContent::resizeGetHeight(int newWidth) {
 		const auto &cardMargins = st::dialogsTopBarSuggestionMargins;
 		const auto inner = _geometry.cardInnerHeight
 			? _geometry.cardInnerHeight
-			: Dialogs::Row::DefaultSt().photoSize;
+			: DefaultDialogRowStyle().photoSize;
 		const auto withMargins = inner + rect::m::sum::v(cardMargins);
 		return int(base::SafeRound(
 			withMargins * (1. - _collapseProgress)));
@@ -739,7 +745,7 @@ void TopBarSuggestionContent::setLeadingWidget(Ui::RpWidget *widget) {
 	widget->setParent(this);
 	widget->setAttribute(Qt::WA_TransparentForMouseEvents);
 	const auto &margins = st::dialogsTopBarSuggestionMargins;
-	const auto &row = Dialogs::Row::DefaultSt();
+	const auto &row = DefaultDialogRowStyle();
 	sizeValue() | rpl::filter_size(
 	) | rpl::on_next([=](const QSize &s) {
 		widget->raise();

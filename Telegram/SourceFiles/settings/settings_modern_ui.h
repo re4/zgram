@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #pragma once
 
-#include "base/functional.h"
+#include "base/basic_types.h"
 #include "base/object_ptr.h"
 #include "ui/style/style_core_types.h"
 #include "ui/wrap/padding_wrap.h"
