@@ -134,18 +134,17 @@ style::colorizer ColorizerFrom(
 		break;
 	case EmbeddedType::Night:
 		result.keepContrast = base::flat_map<QLatin1String, Pair>{ {
-			//{ qstr("windowFgActive"), Pair{ cColor("5288c1"), cColor("17212b") } }, // windowBgActive
-			{ qstr("activeButtonFg"), Pair{ cColor("2f6ea5"), cColor("17212b") } }, // activeButtonBg
-			{ qstr("profileVerifiedCheckFg"), Pair{ cColor("5288c1"), cColor("17212b") } }, // profileVerifiedCheckBg
-			{ qstr("overviewCheckFgActive"), Pair{ cColor("5288c1"), cColor("17212b") } }, // overviewCheckBgActive
-			{ qstr("historyFileInIconFg"), Pair{ cColor("3f96d0"), cColor("182533") } }, // msgFileInBg, msgInBg
-			{ qstr("historyFileInIconFgSelected"), Pair{ cColor("6ab4f4"), cColor("2e70a5") } }, // msgFileInBgSelected, msgInBgSelected
-			{ qstr("historyFileInRadialFg"), Pair{ cColor("3f96d0"), cColor("182533") } }, // msgFileInBg, msgInBg
-			{ qstr("historyFileInRadialFgSelected"), Pair{ cColor("6ab4f4"), cColor("2e70a5") } }, // msgFileInBgSelected, msgInBgSelected
-			{ qstr("historyFileOutIconFg"), Pair{ cColor("4c9ce2"), cColor("2b5278") } }, // msgFileOutBg, msgOutBg
-			{ qstr("historyFileOutIconFgSelected"), Pair{ cColor("58abf3"), cColor("2e70a5") } }, // msgFileOutBgSelected, msgOutBgSelected
-			{ qstr("historyFileOutRadialFg"), Pair{ cColor("4c9ce2"), cColor("2b5278") } }, // msgFileOutBg, msgOutBg
-			{ qstr("historyFileOutRadialFgSelected"), Pair{ cColor("58abf3"), cColor("2e70a5") } }, // msgFileOutBgSelected, msgOutBgSelected
+			{ qstr("activeButtonFg"), Pair{ cColor("c28a2f"), cColor("0a0907") } },
+			{ qstr("profileVerifiedCheckFg"), Pair{ cColor("d49c3d"), cColor("0a0907") } },
+			{ qstr("overviewCheckFgActive"), Pair{ cColor("c99538"), cColor("0a0907") } },
+			{ qstr("historyFileInIconFg"), Pair{ cColor("b87d25"), cColor("0a0907") } },
+			{ qstr("historyFileInIconFgSelected"), Pair{ cColor("dda94c"), cColor("0a0907") } },
+			{ qstr("historyFileInRadialFg"), Pair{ cColor("b87d25"), cColor("0a0907") } },
+			{ qstr("historyFileInRadialFgSelected"), Pair{ cColor("dda94c"), cColor("0a0907") } },
+			{ qstr("historyFileOutIconFg"), Pair{ cColor("d9b85e"), cColor("2b1b08") } },
+			{ qstr("historyFileOutIconFgSelected"), Pair{ cColor("f0d88d"), cColor("3c260a") } },
+			{ qstr("historyFileOutRadialFg"), Pair{ cColor("d9b85e"), cColor("2b1b08") } },
+			{ qstr("historyFileOutRadialFgSelected"), Pair{ cColor("f0d88d"), cColor("3c260a") } },
 		} };
 		result.lightnessMin = 64;
 		break;
@@ -261,14 +260,14 @@ std::vector<EmbeddedScheme> EmbeddedThemes() {
 		},
 		EmbeddedScheme{
 			EmbeddedType::Night,
-			qColor("485761"),
-			qColor("5ca7d4"),
-			qColor("6b808d"),
-			qColor("6b808d"),
-			qColor("5ca7d4"),
-			name(tr::lng_settings_theme_tinted),
+			qColor("100f0c"),
+			qColor("2a1e33"),
+			qColor("17191e"),
+			qColor("67543a"),
+			qColor("c99538"),
+			name(tr::lng_settings_theme_zgram),
 			":/gui/night.tdesktop-theme",
-			qColor("5288c1")
+			qColor("c99538")
 		},
 		EmbeddedScheme{
 			EmbeddedType::NightGreen,
@@ -313,14 +312,14 @@ std::vector<QColor> DefaultAccentColors(EmbeddedType type) {
 		};
 	case EmbeddedType::Night:
 		return {
-			qColor("58bfe8"),
-			qColor("466f42"),
+			qColor("e0ad50"),
+			qColor("4e9c57"),
 			qColor("aa6084"),
-			qColor("a46d3c"),
-			qColor("917bbd"),
+			qColor("a66f21"),
+			qColor("8d61c2"),
 			qColor("ab5149"),
-			qColor("697b97"),
-			qColor("9b834b"),
+			qColor("9c9182"),
+			qColor("f2c76c"),
 		};
 	case EmbeddedType::NightGreen:
 		return {

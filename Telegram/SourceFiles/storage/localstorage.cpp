@@ -14,7 +14,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_document.h"
 #include "data/data_document_media.h"
-#include "base/platform/base_platform_info.h"
 #include "base/random.h"
 #include "ui/power_saving.h"
 #include "core/update_checker.h"
@@ -32,6 +31,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_instance.h"
 
 #include <QtCore/QDirIterator>
+
+#include <string_view>
 
 #ifndef Q_OS_WIN
 #include <unistd.h>
@@ -51,6 +52,8 @@ constexpr auto kSavedBackgroundFormat = QImage::Format_ARGB32_Premultiplied;
 constexpr auto kWallPaperLegacySerializeTagId = int32(-111);
 constexpr auto kWallPaperSerializeTagId = int32(-112);
 constexpr auto kWallPaperSidesLimit = 10'000;
+constexpr auto kZgramDefaultThemeAppliedKey
+	= std::string_view("zgram-default-theme-applied");
 
 const auto kThemeNewPathRelativeTag = u"special://new_tag"_q;
 
@@ -1153,7 +1156,6 @@ void InitialLoadTheme() {
 			DEBUG_LOG(("Theme: zero key for night mode."));
 			Window::Theme::SetNightModeValue(false);
 		}
-		return;
 	} else if (const auto path = InitialLoadThemeUsingKey(key)) {
 		DEBUG_LOG(("Theme: loaded with result: %1").arg(*path));
 		if (_themeKeyLegacy) {
@@ -1174,15 +1176,20 @@ void InitialLoadTheme() {
 		DEBUG_LOG(("Theme: could not load, clearing.."));
 		clearTheme();
 	}
+	ApplyDefaultNightMode();
 }
 
 bool ApplyDefaultNightMode() {
-	const auto NightByDefault = Platform::IsMacStoreBuild();
-	if (!NightByDefault
-		|| Window::Theme::IsNightMode()
+	auto &settings = Core::App().settings();
+	if (settings.readPref<bool>(kZgramDefaultThemeAppliedKey)) {
+		return false;
+	}
+	settings.writePref<bool>(kZgramDefaultThemeAppliedKey, true);
+	if (Window::Theme::IsNightMode()
 		|| _themeKeyDay
 		|| _themeKeyNight
 		|| _themeKeyLegacy) {
+		writeSettings();
 		return false;
 	}
 	Core::App().startSettingsAndBackground();
