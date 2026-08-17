@@ -105,7 +105,7 @@ private:
 	void readTill(MsgId tillId, HistoryItem *tillIdItem);
 	void checkReadTillEnd();
 	void sendReadTillRequest();
-	void reloadUnreadCountIfNeeded();
+	void reloadUnreadCountIfNeeded(MsgId sentTillId = 0);
 
 	const not_null<History*> _history;
 	ForumTopic *_owningTopic = nullptr;

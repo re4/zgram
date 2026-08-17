@@ -987,7 +987,7 @@ void RepliesList::readTill(
 				post->setCommentsInboxReadTill(now);
 			}
 		}
-		if (!_readRequestTimer.isActive()) {
+		if (!_readRequestTimer.isActive() && !_readRequestId) {
 			_readRequestTimer.callOnce(fast ? 0 : kReadRequestTimeout);
 		} else if (fast && _readRequestTimer.remainingTime() > 0) {
 			_readRequestTimer.callOnce(0);
@@ -1004,21 +1004,23 @@ void RepliesList::sendReadTillRequest() {
 	}
 	const auto api = &_history->session().api();
 	api->request(base::take(_readRequestId)).cancel();
+	const auto sentTillId = computeInboxReadTillFull();
 
 	_readRequestId = api->request(MTPmessages_ReadDiscussion(
 		_history->peer->input(),
 		MTP_int(_rootId),
-		MTP_int(computeInboxReadTillFull())
+		MTP_int(sentTillId)
 	)).done(crl::guard(this, [=] {
 		_readRequestId = 0;
-		reloadUnreadCountIfNeeded();
+		reloadUnreadCountIfNeeded(sentTillId);
 	})).send();
 }
 
-void RepliesList::reloadUnreadCountIfNeeded() {
+void RepliesList::reloadUnreadCountIfNeeded(MsgId sentTillId) {
 	if (unreadCountKnown()) {
 		return;
-	} else if (inboxReadTillId() < computeInboxReadTillFull()) {
+	} else if ((sentTillId ? sentTillId : inboxReadTillId())
+		< computeInboxReadTillFull()) {
 		_readRequestTimer.callOnce(0);
 	} else {
 		requestUnreadCount();
