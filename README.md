@@ -1,99 +1,280 @@
-# [Telegram Desktop][telegram_desktop] – Official Messenger
+<p align="center">
+  <img src="website/assets/og.png" alt="Zgram — Messaging, elevated." width="100%">
+</p>
 
-This is the complete source code and the build instructions for the official [Telegram][telegram] messenger desktop client, based on the [Telegram API][telegram_api] and the [MTProto][telegram_proto] secure protocol.
+<h1 align="center">Zgram</h1>
 
-[![Version](https://badge.fury.io/gh/telegramdesktop%2Ftdesktop.svg)](https://github.com/telegramdesktop/tdesktop/releases)
-[![Build Status](https://github.com/telegramdesktop/tdesktop/workflows/Windows./badge.svg)](https://github.com/telegramdesktop/tdesktop/actions)
-[![Build Status](https://github.com/telegramdesktop/tdesktop/workflows/MacOS./badge.svg)](https://github.com/telegramdesktop/tdesktop/actions)
-[![Build Status](https://github.com/telegramdesktop/tdesktop/workflows/Linux./badge.svg)](https://github.com/telegramdesktop/tdesktop/actions)
-[![Built with Depot](https://img.shields.io/badge/Built%20with-Depot.dev-46A75A)](https://depot.dev)
+<p align="center">
+  <strong>Messaging, elevated.</strong><br>
+  A power-user Telegram Desktop experience with private local archives,
+  local bookmarks, faster navigation, deeper personalization, and a new visual identity.
+</p>
 
-[![Preview of Telegram Desktop][preview_image]][preview_image_url]
+<p align="center">
+  <code>Windows 64-bit</code>&nbsp;&nbsp;·&nbsp;&nbsp;
+  <code>Qt 6</code>&nbsp;&nbsp;·&nbsp;&nbsp;
+  <code>Telegram Desktop based</code>&nbsp;&nbsp;·&nbsp;&nbsp;
+  <code>GPLv3</code>
+</p>
 
-The source code is published under GPLv3 with OpenSSL exception, the license is available [here][license].
+<p align="center">
+  <a href="https://t.me/zgram_io"><strong>Download Zgram</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://t.me/zgram_io">Official updates</a>
+  &nbsp;·&nbsp;
+  <a href="#features">Features</a>
+  &nbsp;·&nbsp;
+  <a href="#building-zgram">Build from source</a>
+</p>
 
-## Supported systems
+> [!IMPORTANT]
+> Zgram is an independent community modification of Telegram Desktop. It is
+> not affiliated with, sponsored by, or endorsed by Telegram Messenger LLP.
+> Telegram is a trademark of its respective owner.
 
-The latest version is available for
+## Download
 
-* [Windows 7 and above (64 bit)](https://telegram.org/dl/desktop/win64) ([portable](https://telegram.org/dl/desktop/win64_portable))
-* [Windows 7 and above (32 bit)](https://telegram.org/dl/desktop/win) ([portable](https://telegram.org/dl/desktop/win_portable))
-* [macOS 10.13 and above](https://telegram.org/dl/desktop/mac)
-* [Linux static build for 64 bit](https://telegram.org/dl/desktop/linux)
-* [Snap](https://snapcraft.io/telegram-desktop)
-* [Flatpak](https://flathub.org/apps/details/org.telegram.desktop)
+The current community build targets **Windows 64-bit**. Get the newest verified
+build, release notes, installation notes, and update announcements from the
+[official Zgram updates channel](https://t.me/zgram_io).
 
-## Old system versions
+Only install builds published through the official channel. Zgram is based on
+the cross-platform Telegram Desktop source, but other operating systems do not
+currently have an official Zgram binary distribution.
 
-Version **4.9.9** was the last that supports older systems
+## What is Zgram?
 
-* [macOS 10.12](https://updates.tdesktop.com/tmac/tsetup.4.9.9.dmg)
-* [Linux with glibc < 2.28 static build](https://updates.tdesktop.com/tlinux/tsetup.4.9.9.tar.xz)
+Zgram keeps the familiar Telegram Desktop foundation and adds a focused layer
+for people who want more control over their workspace and locally available
+message context. The additions are integrated into the existing settings,
+message menus, chat header, and media tools instead of living in a separate
+companion app.
 
-Version **2.4.4** was the last that supports older systems
+The project includes a complete angel-wing visual identity, a redesigned
+Power User center, encrypted on-device archives and bookmarks, a searchable
+command palette, compact layouts, custom chat styling, and automated Windows
+development builds.
 
-* [OS X 10.10 and 10.11](https://updates.tdesktop.com/tosx/tsetup-osx.2.4.4.dmg)
-* [Linux static build for 32 bit](https://updates.tdesktop.com/tlinux32/tsetup32.2.4.4.tar.xz)
+## Features
 
-Version **1.8.15** was the last that supports older systems
+| Feature | What it adds |
+| --- | --- |
+| **Encrypted Local Archive** | Opt-in, per-chat snapshots and edit history stored only on this device |
+| **Local Bookmarks** | Private, searchable message snapshots available from any chat |
+| **Command Palette** | One keyboard-driven search for navigation, settings, local tools, and current-chat media |
+| **Power User Center** | A dedicated home for appearance, layout, hover actions, workspaces, archives, and bookmarks |
+| **Flexible interface** | Compact or comfortable density, adjustable sidebar width, bubble corners, and window transparency |
+| **Expanded chat tools** | Chat appearance, mute controls, filtered media galleries, archive controls, and bookmark actions |
+| **Modern Zgram UI** | Hero panels, action cards, status badges, refined empty states, and rounded chat-list states |
+| **Angel-wing identity** | Custom Zgram artwork and application icons across supported desktop resources |
+| **Windows auto-builds** | Automated GitHub Actions Debug builds with downloadable artifacts for development testing |
 
-* [Windows XP and Vista](https://updates.tdesktop.com/tsetup/tsetup.1.8.15.exe) ([portable](https://updates.tdesktop.com/tsetup/tportable.1.8.15.zip))
-* [OS X 10.8 and 10.9](https://updates.tdesktop.com/tmac/tsetup.1.8.15.dmg)
-* [OS X 10.6 and 10.7](https://updates.tdesktop.com/tmac32/tsetup32.1.8.15.dmg)
+### Encrypted Local Archive
 
-## Third-party
+Local Archive is an opt-in history for selected chats. It records message
+information that this Zgram installation actually observes and stores it in
+the account's encrypted local storage.
 
-* Qt 6 ([LGPL](http://doc.qt.io/qt-6/lgpl.html)) and Qt 5.15 ([LGPL](http://doc.qt.io/qt-5/lgpl.html)) slightly patched
-* OpenSSL 3.2.1 ([Apache License 2.0](https://openssl-library.org/source/license/apache-license-2.0.txt))
-* WebRTC ([New BSD License](https://github.com/desktop-app/tg_owt/blob/master/LICENSE))
-* zlib ([zlib License](http://www.zlib.net/zlib_license.html))
-* LZMA SDK 9.20 ([public domain](http://www.7-zip.org/sdk.html))
-* liblzma ([public domain](http://tukaani.org/xz/))
-* Google Breakpad ([License](https://chromium.googlesource.com/breakpad/breakpad/+/master/LICENSE))
-* Google Crashpad ([Apache License 2.0](https://chromium.googlesource.com/crashpad/crashpad/+/master/LICENSE))
-* GYP ([BSD License](https://github.com/bnoordhuis/gyp/blob/master/LICENSE))
-* Ninja ([Apache License 2.0](https://github.com/ninja-build/ninja/blob/master/COPYING))
-* OpenAL Soft ([LGPL](https://github.com/kcat/openal-soft/blob/master/COPYING))
-* Opus codec ([BSD License](http://www.opus-codec.org/license/))
-* FFmpeg ([LGPL](https://www.ffmpeg.org/legal.html))
-* Guideline Support Library ([MIT License](https://github.com/Microsoft/GSL/blob/master/LICENSE))
-* Range-v3 ([Boost License](https://github.com/ericniebler/range-v3/blob/master/LICENSE.txt))
-* Open Sans font ([Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0.html))
-* Vazirmatn font ([SIL Open Font License 1.1](https://github.com/rastikerdar/vazirmatn/blob/master/OFL.txt))
-* Emoji alpha codes ([MIT License](https://github.com/emojione/emojione/blob/master/extras/alpha-codes/LICENSE.md))
-* xxHash ([BSD License](https://github.com/Cyan4973/xxHash/blob/dev/LICENSE))
-* QR Code generator ([MIT License](https://github.com/nayuki/QR-Code-generator#license))
-* CMake ([New BSD License](https://github.com/Kitware/CMake/blob/master/Copyright.txt))
-* Hunspell ([LGPL](https://github.com/hunspell/hunspell/blob/master/COPYING.LESSER))
-* Ada ([Apache License 2.0](https://github.com/ada-url/ada/blob/main/LICENSE-APACHE))
+- Enable archiving separately for each eligible chat.
+- Choose a retention period: **7 days**, **30 days**, **1 year**, or **Forever**.
+- Keep message text, sender, date, reply target, outgoing state, and media summaries.
+- Preserve locally observed edit versions and deletion state.
+- Browse all archived chats or open a dedicated timeline for one chat.
+- See clear `MESSAGE`, `EDITED`, `DELETED`, and `MEDIA` status badges.
+- Review per-chat message counts, storage size, and retention policy.
+- Search normally or narrow results with:
+  - `is:message`
+  - `is:deleted`
+  - `is:edited` or `has:edits`
+  - `has:media`
+  - `from:name`
+- Export one chat as structured **JSON** or a readable standalone **HTML** timeline.
+- Clear one chat's archive or delete every local archive for the current account.
+- See a `LOCAL` badge in the chat header while archiving is active.
 
-## Build instructions
+Secret chats, self-destructing messages, view-once media, and protected content
+are never added to Local Archive. Because the archive only captures content
+observed by this installation, it is not a way to retrieve earlier or unseen
+messages from Telegram.
 
-* [Windows (32-bit and 64-bit)][win]
-* [macOS][mac]
-* [GNU/Linux using Docker][linux]
+### Local Bookmarks
 
-[//]: # (LINKS)
-[telegram]: https://telegram.org
-[telegram_desktop]: https://desktop.telegram.org
-[telegram_api]: https://core.telegram.org
-[telegram_proto]: https://core.telegram.org/mtproto
-[license]: LICENSE
-[win]: docs/building-win.md
-[mac]: docs/building-mac.md
-[linux]: docs/building-linux.md
-[preview_image]: https://github.com/telegramdesktop/tdesktop/blob/dev/docs/assets/preview.png "Preview of Telegram Desktop"
-[preview_image_url]: https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/docs/assets/preview.png
+Local Bookmarks are private message snapshots that stay with this account on
+this device.
 
-## Thanks to
+- Add or remove a bookmark from a message's context menu.
+- Search all bookmarks from a dedicated local view.
+- Retain the last locally observed text and message context when a bookmarked
+  Telegram message is later deleted.
+- Keep useful snapshot details such as the chat, sender, date, reply target,
+  outgoing state, and media summary.
+- Mark deleted source messages clearly and remove them by selecting the entry.
+- Clear all local bookmarks whenever you want.
 
-<a href="https://depot.dev">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://depot.dev/assets/brand/1693758816/depot-logo-horizontal-on-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://depot.dev/assets/brand/1693758816/depot-logo-horizontal-on-light.svg">
-    <img alt="Depot" src="https://depot.dev/assets/brand/1693758816/depot-logo-horizontal-on-light.svg" width="150">
-  </picture>
-</a>
+Bookmarks do not sync through Telegram and are separate from Saved Messages.
 
-CI infrastructure sponsored by [Depot](https://depot.dev) — fast GitHub Actions runners.
+### Command Palette
 
+Press <kbd>Ctrl</kbd> + <kbd>K</kbd> to search Zgram commands from one place.
+The palette can open:
+
+- Telegram search, Saved Messages, and Contacts
+- Main, Advanced, and Power User settings
+- Chat workspaces, folders, and tabs
+- Local Archive and Local Bookmarks
+- The current chat's photos, videos, files, links, music, and voice/video messages
+- Chat appearance controls when a chat is open
+
+Results are grouped into **Navigation**, **Interface**, **Local data**, and
+**Current chat** categories.
+
+### Power User Center
+
+Open **Settings → Power User** to shape Zgram around your workflow.
+
+- **Layout density:** Comfortable or Compact
+- **Message bubble radius:** Rounded or Compact corners
+- **Sidebar width:** Narrow, Balanced, or Wide
+- **Window transparency:** Off, Subtle, or Glass
+- Quick links to accent colors, themes, chat wallpaper, and blur controls
+- Independent toggles for quick reply and quick reactions on message hover
+- Direct access to the Command Palette, chat workspaces, Local Archive, and
+  Local Bookmarks
+
+Compact density reaches beyond the main list to chat rows, forum topics, and
+related sidebar surfaces for a consistently tighter workspace.
+
+### Chat and media workflow
+
+Zgram extends the existing chat menus with quicker access to the tools used
+most often:
+
+- A **Chat profile** submenu for mute controls, chat appearance, and media
+  filters
+- One-click filtered galleries for photos, videos, files, links, music, and
+  voice/video messages
+- Per-chat archive retention, viewing, and clearing controls
+- A message context action for local bookmarks
+- A visible local-archive status indicator in the chat header
+- Refined compact rows and rounded active, selected, and hover states
+
+### Modern interface system
+
+The new Zgram settings use reusable hero panels, action cards, toggle cards,
+badges, grouped panels, and informative empty states. Search keywords are
+included throughout the new settings so features remain easy to discover.
+
+### Telegram Desktop foundation
+
+Zgram retains the core Telegram Desktop experience—including chats, groups,
+channels, media, calls, notifications, themes, folders, and Telegram's normal
+account and privacy controls—while layering its additions on top.
+
+## Feature map
+
+| What you want to do | Where to find it |
+| --- | --- |
+| Open the command palette | <kbd>Ctrl</kbd> + <kbd>K</kbd> |
+| Customize Zgram | **Settings → Power User** |
+| View every local archive | **Settings → Advanced → Local Archive** |
+| Set retention for one chat | Open the chat menu → **Local archive…** |
+| View local bookmarks | **Settings → Power User → Local Bookmarks** |
+| Bookmark a message | Right-click the message → bookmark action |
+| Filter a chat's media | Open the chat menu → **Chat profile → Filtered media gallery** |
+| Change one chat's look | Open the chat menu → **Chat profile → Chat appearance** |
+
+## Local data and privacy
+
+Zgram's added data tools are intentionally local:
+
+| Data | Storage behavior |
+| --- | --- |
+| Local archives | Encrypted for the signed-in account and kept only on this device |
+| Local bookmarks | Encrypted for the signed-in account and kept only on this device |
+| Telegram messages | Continue to follow Telegram's own cloud and secret-chat behavior |
+| JSON/HTML exports | Written as readable files to the location you choose |
+
+> [!CAUTION]
+> Exported JSON and HTML files are no longer protected by Zgram's encrypted
+> local storage. Store or share exports with the same care as any private chat
+> history.
+
+Local Archive and Local Bookmarks are not cloud backups. Removing local app
+data, deleting archives, or losing the device can permanently remove them.
+
+## Automated Windows builds
+
+The repository includes a GitHub Actions workflow for Windows x64 development
+builds. It runs manually and for configured pushes or pull requests, producing
+an artifact whose name begins with `Zgram Windows Debug`.
+
+- Qt 6 and Ninja Multi-Config
+- Visual Studio x64 toolchain
+- Debug configuration only
+- Superseded runs are cancelled automatically
+- Build artifacts are retained for 14 days
+
+These artifacts are intended for development and testing. Public release
+downloads are announced through [@zgram_io](https://t.me/zgram_io).
+
+## Building Zgram
+
+Zgram is a large native C++/Qt project. A configured Telegram Desktop build
+environment and its external libraries are required; cloning this repository
+alone is not enough.
+
+### Windows Debug build
+
+1. Install Visual Studio with the C++ desktop toolchain and prepare the
+   Telegram Desktop Windows dependencies.
+2. Open an **x64 Native Tools Command Prompt**.
+3. From the repository root, build the existing configured tree:
+
+```powershell
+cmake --build out --config Debug --target Telegram
+```
+
+The executable is produced at:
+
+```text
+out/Debug/Telegram.exe
+```
+
+Use Debug builds for local development. Full upstream environment setup is
+documented in:
+
+- [Windows build guide](docs/building-win.md)
+- [macOS build guide](docs/building-mac.md)
+- [Linux build guide](docs/building-linux.md)
+
+The custom GitHub workflow is also available under
+[`.github/workflows`](.github/workflows) as a reference for the Windows build
+environment.
+
+## Website
+
+The official Zgram landing page is a dependency-free static site built with
+plain HTML, CSS, and JavaScript. Its source is in [`website/`](website/).
+
+## Source, licensing, and credits
+
+Zgram is based on
+[Telegram Desktop](https://github.com/telegramdesktop/tdesktop) and uses the
+[Telegram API](https://core.telegram.org/api). The source is distributed under
+the **GNU General Public License v3** with the OpenSSL exception described in
+[LICENSE](LICENSE). Third-party notices and dependency licenses are listed in
+[LEGAL](LEGAL).
+
+This project is maintained independently. The Telegram name and original
+Telegram Desktop project belong to their respective owners.
+
+## Official links
+
+- **Updates, downloads, and release notes:** [t.me/zgram_io](https://t.me/zgram_io)
+- **Source code:** [github.com/re4/zgram](https://github.com/re4/zgram)
+
+<p align="center">
+  <img src="website/assets/zgram-angel.png" alt="Zgram angel-wing emblem" width="260">
+</p>
+
+<p align="center"><strong>ZGRAM · YOUR WAY</strong></p>
