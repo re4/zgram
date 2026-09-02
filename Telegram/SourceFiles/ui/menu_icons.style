@@ -96,6 +96,7 @@ menuIconSoundOn: icon {{ "menu/sound_enable", menuIconColor }};
 menuIconSoundOff: icon {{ "menu/sound_disable", menuIconColor }};
 menuIconSoundSelect: icon {{ "menu/sound_select", menuIconColor }};
 menuIconSoundAdd: icon {{ "menu/sound_add", menuIconColor }};
+menuIconVoice: icon {{ "voice_lock/input_mic_s", menuIconColor }};
 menuIconFile: icon {{ "menu/file", menuIconColor }};
 menuIconPhoto: icon {{ "menu/image", menuIconColor }};
 menuIconAddToFolder: icon {{ "menu/add_to_folder", menuIconColor }};

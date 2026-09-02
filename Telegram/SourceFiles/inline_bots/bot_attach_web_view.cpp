@@ -23,17 +23,20 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "boxes/peer_list_controllers.h"
 #include "boxes/premium_preview_box.h"
 #include "boxes/report_messages_box.h"
+#include "boxes/send_files_box.h"
 #include "boxes/share_box.h"
 #include "chat_helpers/stickers_lottie.h"
 #include "chat_helpers/tabbed_panel.h"
 #include "core/application.h"
 #include "core/click_handler_types.h"
+#include "core/file_utilities.h"
 #include "core/local_url_handlers.h"
 #include "core/shortcuts.h"
 #include "core/ui_integration.h" // TextContext
 #include "data/components/ephemeral_messages.h"
 #include "data/components/location_pickers.h"
 #include "data/data_bot_app.h"
+#include "data/data_chat_participant_status.h"
 #include "data/data_changes.h"
 #include "data/data_document.h"
 #include "data/data_document_media.h"
@@ -62,14 +65,18 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "main/main_domain.h"
 #include "main/main_session.h"
 #include "mainwidget.h"
+#include "menu/menu_send.h"
 #include "payments/payments_checkout_process.h"
 #include "payments/payments_non_panel_process.h"
 #include "settings/sections/settings_premium.h"
+#include "storage/localimageloader.h"
 #include "storage/storage_account.h"
 #include "storage/storage_domain.h"
+#include "storage/storage_media_prepare.h"
 #include "ui/basic_click_handlers.h"
 #include "ui/boxes/confirm_box.h"
 #include "ui/chat/attach/attach_bot_webview.h"
+#include "ui/chat/attach/attach_prepare.h"
 #include "ui/controls/location_picker.h"
 #include "ui/controls/userpic_button.h"
 #include "ui/delayed_activation.h"
@@ -2915,6 +2922,243 @@ void AttachWebView::toggleInMenu(
 	}).send();
 }
 
+void ApplyAttachSendOptions(
+		Api::SendOptions &base,
+		const Api::SendOptions &options) {
+	const auto empty = Api::SendOptions();
+	if (options.price != empty.price) {
+		base.price = options.price;
+	}
+	if (options.sendAs != empty.sendAs) {
+		base.sendAs = options.sendAs;
+	}
+	if (options.scheduled != empty.scheduled) {
+		base.scheduled = options.scheduled;
+	}
+	if (options.scheduleRepeatPeriod != empty.scheduleRepeatPeriod) {
+		base.scheduleRepeatPeriod = options.scheduleRepeatPeriod;
+	}
+	if (options.shortcutId != empty.shortcutId) {
+		base.shortcutId = options.shortcutId;
+	}
+	if (options.effectId != empty.effectId) {
+		base.effectId = options.effectId;
+	}
+	if (options.stakeSeedHash != empty.stakeSeedHash) {
+		base.stakeSeedHash = options.stakeSeedHash;
+	}
+	if (options.stakeNanoTon != empty.stakeNanoTon) {
+		base.stakeNanoTon = options.stakeNanoTon;
+	}
+	if (options.starsApproved != empty.starsApproved) {
+		base.starsApproved = options.starsApproved;
+	}
+	if (options.silent != empty.silent) {
+		base.silent = options.silent;
+	}
+	if (options.handleSupportSwitch != empty.handleSupportSwitch) {
+		base.handleSupportSwitch = options.handleSupportSwitch;
+	}
+	if (options.invertCaption != empty.invertCaption) {
+		base.invertCaption = options.invertCaption;
+	}
+	if (options.hideViaBot != empty.hideViaBot) {
+		base.hideViaBot = options.hideViaBot;
+	}
+	if (options.mediaSpoiler != empty.mediaSpoiler) {
+		base.mediaSpoiler = options.mediaSpoiler;
+	}
+	if (options.ttlSeconds != empty.ttlSeconds) {
+		base.ttlSeconds = options.ttlSeconds;
+	}
+	if (options.suggest != empty.suggest) {
+		base.suggest = options.suggest;
+	}
+}
+
+[[nodiscard]] Api::SendType AttachSendType(
+		const Api::SendAction &action) {
+	if (!action.options.scheduled) {
+		return Api::SendType::Normal;
+	}
+	return (action.options.scheduled == Api::kScheduledUntilOnlineTimestamp)
+		? Api::SendType::ScheduledToUser
+		: Api::SendType::Scheduled;
+}
+
+[[nodiscard]] bool IsVoiceFile(const Ui::PreparedFile &file) {
+	if (file.type != Ui::PreparedFile::Type::Music || !file.information) {
+		return false;
+	}
+	const auto song = std::get_if<Ui::PreparedFileInformation::Song>(
+		&file.information->media);
+	return song && (song->duration > 0);
+}
+
+[[nodiscard]] bool IsSingleVoiceBundle(const Ui::PreparedBundle &bundle) {
+	if (bundle.totalCount != 1 || bundle.groups.size() != 1) {
+		return false;
+	}
+	const auto &list = bundle.groups.front().list;
+	return (list.files.size() == 1)
+		&& list.filesToProcess.empty()
+		&& IsVoiceFile(list.files.front());
+}
+
+void ChooseAndSendVoice(
+		not_null<Window::SessionController*> controller,
+		not_null<PeerData*> peer,
+		Api::SendAction initialAction,
+		SendMenu::Details sendMenuDetails) {
+	const auto show = controller->uiShow();
+	const auto callback = crl::guard(controller, [=](
+			FileDialog::OpenResult &&result) {
+		if (result.paths.isEmpty()) {
+			return;
+		}
+		auto list = ::Storage::PrepareMediaList(
+			result.paths.mid(0, 1),
+			st::sendMediaPreviewSize,
+			controller->session().premium());
+		if (Data::ShowSendError(
+				show,
+				peer,
+				list,
+				std::nullopt,
+				true,
+				true)) {
+			return;
+		} else if (list.files.size() != 1
+			|| !list.filesToProcess.empty()
+			|| !IsVoiceFile(list.files.front())) {
+			show->showToast(tr::lng_send_media_invalid_files(tr::now));
+			return;
+		}
+
+		struct State {
+			SendPaymentHelper sendPayment;
+			Fn<void(
+				std::shared_ptr<Ui::PreparedBundle>,
+				Api::SendOptions,
+				FullReplyTo)> send;
+		};
+		const auto state = std::make_shared<State>();
+		const auto weakState = std::weak_ptr<State>(state);
+		state->send = [=](
+				std::shared_ptr<Ui::PreparedBundle> bundle,
+				Api::SendOptions options,
+				FullReplyTo replyTo) {
+			const auto state = weakState.lock();
+			if (!state) {
+				return;
+			}
+			if (!bundle || !IsSingleVoiceBundle(*bundle)) {
+				state->send = nullptr;
+				show->showToast(tr::lng_send_media_invalid_files(tr::now));
+				return;
+			}
+			const auto restriction = Data::RestrictionError(
+				peer,
+				ChatRestriction::SendVoiceMessages);
+			if (restriction) {
+				state->send = nullptr;
+				Data::ShowSendErrorToast(show, peer, restriction);
+				return;
+			}
+
+			auto action = initialAction;
+			ApplyAttachSendOptions(action.options, options);
+			action.clearDraft = false;
+			action.replyTo = replyTo;
+			const auto &text = bundle->groups.front().list.files.front().caption;
+			const auto thread = not_null<Data::Thread*>(
+				static_cast<Data::Thread*>(action.history.get()));
+			const auto error = GetErrorForSending(thread, {
+				.topicRootId = action.replyTo.topicRootId,
+				.text = &text,
+				.messagesCount = 1,
+			});
+			if (error) {
+				state->send = nullptr;
+				show->showBox(MakeSendErrorBox({
+					.error = error,
+					.thread = thread,
+				}, false));
+				return;
+			}
+
+			const auto resend = [=](int approved) {
+				if (const auto onstack = state->send) {
+					auto copy = options;
+					copy.starsApproved = approved;
+					onstack(bundle, copy, replyTo);
+				}
+			};
+			const auto ephemeralReply = controller->session()
+				.ephemeralMessages().isEphemeralBotReply(replyTo.messageId);
+			if (!ephemeralReply && !state->sendPayment.check(
+					show,
+					peer,
+					action.options,
+					1,
+					resend)) {
+				return;
+			}
+
+			state->send = nullptr;
+			controller->session().api().sendFiles(
+				std::move(bundle->groups.front().list),
+				SendMediaType::Audio,
+				nullptr,
+				action);
+		};
+
+		auto box = Box<SendFilesBox>(SendFilesBoxDescriptor{
+			.show = show,
+			.list = std::move(list),
+			.caption = TextWithTags(),
+			.toPeer = peer,
+			.limits = SendFilesAllow::OnlyOne | SendFilesAllow::Music,
+			.check = [=](
+					const Ui::PreparedFile &file,
+					bool,
+					bool silent) {
+				if (!IsVoiceFile(file)) {
+					if (!silent) {
+						show->showToast(
+							tr::lng_send_media_invalid_files(tr::now));
+					}
+					return false;
+				}
+				const auto error = Data::RestrictionError(
+					peer,
+					ChatRestriction::SendVoiceMessages);
+				if (error && !silent) {
+					Data::ShowSendErrorToast(show, peer, error);
+				}
+				return !error;
+			},
+			.sendType = AttachSendType(initialAction),
+			.sendMenuDetails = [=] { return sendMenuDetails; },
+			.confirmed = [=](
+					std::shared_ptr<Ui::PreparedBundle> bundle,
+					Api::SendOptions options,
+					FullReplyTo replyTo) {
+				if (const auto send = state->send) {
+					send(std::move(bundle), options, replyTo);
+				}
+			},
+			.replyTo = initialAction.replyTo,
+		});
+		controller->show(std::move(box));
+	});
+	FileDialog::GetOpenPath(
+		controller->content().get(),
+		tr::lng_all_voice(tr::now),
+		FileDialog::AudioFilesFilter(),
+		callback);
+}
+
 void ChooseAndSendLocation(
 		not_null<Window::SessionController*> controller,
 		const Ui::LocationPickerConfig &config,
@@ -3072,6 +3316,16 @@ std::unique_ptr<Ui::DropdownMenu> MakeAttachBotsMenu(
 		raw->addAction(tr::lng_all_music(tr::now), [=] {
 			controller->show(Box(MusicAttachBox, controller, peer, actionFactory));
 		}, &st::menuIconSoundOn);
+	}
+	if (Data::CanSend(peer, ChatRestriction::SendVoiceMessages, false)) {
+		++minimal;
+		raw->addAction(tr::lng_all_voice(tr::now), [=] {
+			ChooseAndSendVoice(
+				controller,
+				peer,
+				actionFactory(),
+				sendMenuDetails());
+		}, &st::menuIconVoice);
 	}
 	const auto addBots = Data::CanSend(peer, ChatRestriction::SendInline, false)
 		&& !peer->starsPerMessageChecked();

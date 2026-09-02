@@ -54,6 +54,32 @@ constexpr auto kRecompressAfterBpp = 4;
 
 using Ui::ValidateThumbDimensions;
 
+[[nodiscard]] VoiceWaveform GenerateVoiceWaveform() {
+	const auto size = Media::Player::kWaveformSamplesCount;
+	auto randomBytes = bytes::vector(size);
+	base::RandomFill(randomBytes.data(), randomBytes.size());
+	auto result = VoiceWaveform(size);
+	for (auto i = 1; i < size; i += 2) {
+		const auto peak = uchar(randomBytes[i]) % 31;
+		result[i - 1] = char(std::max(
+			0,
+			peak - (uchar(randomBytes[i - 1]) % 3 + 2)));
+		result[i] = char(peak);
+	}
+	return result;
+}
+
+[[nodiscard]] QString VoiceMimeType(
+		const QFileInfo &info,
+		const QString &detected) {
+	const auto suffix = info.suffix().toLower();
+	return (suffix == u"ogg"_q
+		|| suffix == u"oga"_q
+		|| suffix == u"opus"_q)
+		? u"audio/ogg"_q
+		: detected;
+}
+
 struct PreparedFileThumbnail {
 	uint64 id = 0;
 	QString name;
@@ -789,18 +815,26 @@ void FileLoadTask::process(ProcessArgs &&args) {
 			return;
 		}
 
-		// Voice sending is supported only from memory for now.
-		// Because for voice we force mime type and don't read MediaInformation.
-		// For a real file we always read mime type and read MediaInformation.
-		Assert(!isVoice && !isRound);
+		Assert(!isRound);
 
 		filesize = info.size();
 		filename = info.fileName();
 		if (!_information) {
 			_information = readMediaInformation(Core::MimeTypeForFile(info).name());
 		}
-		filemime = _information->filemime;
-		if (auto image = std::get_if<Ui::PreparedFileInformation::Image>(
+		filemime = isVoice
+			? VoiceMimeType(info, _information->filemime)
+			: _information->filemime;
+		if (isVoice) {
+			const auto song = std::get_if<Ui::PreparedFileInformation::Song>(
+				&_information->media);
+			if (!song || song->duration <= 0) {
+				filesize = 0;
+			} else {
+				_duration = song->duration;
+				_waveform = GenerateVoiceWaveform();
+			}
+		} else if (auto image = std::get_if<Ui::PreparedFileInformation::Image>(
 				&_information->media)) {
 			fullimage = base::take(image->data);
 			fullimagebytes = base::take(image->bytes);
