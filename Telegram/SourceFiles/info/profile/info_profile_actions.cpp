@@ -44,6 +44,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_forum.h"
 #include "data/data_forum_topic.h"
 #include "data/data_peer_values.h"
+#include "data/data_photo.h"
 #include "data/data_saved_sublist.h"
 #include "data/data_session.h"
 #include "data/data_user.h"
@@ -141,9 +142,10 @@ private:
 
 base::options::toggle ShowPeerIdBelowAbout({
 	.id = kOptionShowPeerIdBelowAbout,
-	.name = "Show Peer IDs in Profile",
-	.description = "Show peer IDs from API below their Bio / Description."
-		" Add contact IDs to exported data.",
+	.name = "Show IDs and Data Centers in Profile",
+	.description = "Show peer IDs from API and user profile photo data"
+		" centers in Profile. Add contact IDs to exported data.",
+	.defaultValue = true,
 });
 
 base::options::toggle ShowChannelJoinedBelowAbout({
@@ -228,13 +230,79 @@ base::options::toggle ShowChannelJoinedBelowAbout({
 	return Ui::CreateSkipWidget(parent, st::infoProfileSkip);
 }
 
+[[nodiscard]] int ImageDcId(const ImageLocation &location) {
+	const auto storage = std::get_if<StorageFileLocation>(
+		&location.file().data);
+	return storage ? storage->dcId() : 0;
+}
+
+[[nodiscard]] int UserProfilePhotoDcId(not_null<UserData*> user) {
+	if (const auto dcId = ImageDcId(user->userpicLocation())) {
+		return dcId;
+	}
+	const auto photoId = user->userpicPhotoId();
+	if (!photoId) {
+		return 0;
+	}
+	const auto photo = user->owner().photo(photoId);
+	for (const auto size : {
+			Data::PhotoSize::Large,
+			Data::PhotoSize::Thumbnail,
+			Data::PhotoSize::Small }) {
+		if (const auto dcId = ImageDcId(photo->location(size))) {
+			return dcId;
+		}
+	}
+	return 0;
+}
+
+[[nodiscard]] QString DcLocationName(int dcId) {
+	switch (dcId) {
+	case 1:
+	case 3: return u"Miami, US"_q;
+	case 2:
+	case 4: return u"Amsterdam, NL"_q;
+	case 5: return u"Singapore, SG"_q;
+	}
+	return QString();
+}
+
+[[nodiscard]] rpl::producer<TextWithEntities> UserIdAndDcValue(
+		not_null<UserData*> user) {
+	return user->session().changes().peerFlagsValue(
+		user,
+		Data::PeerUpdate::Flag::Photo
+			| Data::PeerUpdate::Flag::FullInfo
+	) | rpl::map([=] {
+		if (!ShowPeerIdBelowAbout.value()) {
+			return tr::marked();
+		}
+		const auto raw = user->id.value & PeerId::kChatTypeMask;
+		auto result = Ui::Text::Link(
+			tr::marked(QString::number(raw)),
+			kPeerIdLinkIndex);
+		const auto dcId = UserProfilePhotoDcId(user);
+		result.append(u" · DC "_q);
+		if (!dcId) {
+			result.append(u"unavailable"_q);
+			return result;
+		}
+		result.append(QString::number(dcId));
+		const auto location = DcLocationName(dcId);
+		if (!location.isEmpty()) {
+			result.append(u" ("_q + location + ')');
+		}
+		return result;
+	});
+}
+
 [[nodiscard]] rpl::producer<TextWithEntities> AboutWithAdvancedValue(
 		not_null<PeerData*> peer) {
 
 	return AboutValue(
 		peer
 	) | rpl::map([=](TextWithEntities &&value) {
-		if (ShowPeerIdBelowAbout.value()) {
+		if (ShowPeerIdBelowAbout.value() && !peer->asUser()) {
 			using namespace Ui::Text;
 			if (!value.empty()) {
 				value.append("\n\n");
@@ -242,7 +310,7 @@ base::options::toggle ShowChannelJoinedBelowAbout({
 			value.append(Italic(u"id: "_q));
 			const auto raw = peer->id.value & PeerId::kChatTypeMask;
 			value.append(Link(
-				Italic(Lang::FormatCountDecimal(raw)),
+				Italic(QString::number(raw)),
 				kPeerIdLinkIndex));
 		}
 		if (ShowChannelJoinedBelowAbout.value()) {
@@ -276,12 +344,30 @@ base::options::toggle ShowChannelJoinedBelowAbout({
 void SetupAboutPeerIdDrag(
 		not_null<Ui::FlatLabel*> label,
 		not_null<PeerData*> peer) {
-	if (!ShowPeerIdBelowAbout.value()) {
+	if (!ShowPeerIdBelowAbout.value() || peer->asUser()) {
 		return;
 	}
 	const auto id = QString::number(peer->id.value & PeerId::kChatTypeMask);
 	AboutValue(
 		peer
+	) | rpl::on_next([=] {
+		label->setLink(
+			kPeerIdLinkIndex,
+			std::make_shared<DraggableUrlClickHandler>(
+				u"internal:~peer_id~:copy:"_q + id,
+				id));
+	}, label->lifetime());
+}
+
+void SetupUserIdDrag(
+		not_null<Ui::FlatLabel*> label,
+		not_null<UserData*> user) {
+	if (!ShowPeerIdBelowAbout.value()) {
+		return;
+	}
+	const auto id = QString::number(user->id.value & PeerId::kChatTypeMask);
+	UserIdAndDcValue(
+		user
 	) | rpl::on_next([=] {
 		label->setLink(
 			kPeerIdLinkIndex,
@@ -1682,7 +1768,11 @@ Section DetailsFiller::makeInfo() {
 			std::move(label),
 			AboutWithAdvancedValue(user));
 		addTranslateToMenu(about.text, AboutWithAdvancedValue(user));
-		SetupAboutPeerIdDrag(about.text, user);
+
+		const auto idAndDc = addInfoLine(
+			tr::lng_info_id_dc_label(),
+			UserIdAndDcValue(user));
+		SetupUserIdDrag(idAndDc.text, user);
 
 		const auto usernameLine = addInfoOneLine(
 			UsernamesSubtext(_peer, tr::lng_info_username_label()),

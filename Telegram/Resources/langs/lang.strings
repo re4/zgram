@@ -1931,6 +1931,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_info_mobile_hidden" = "Hidden";
 "lng_info_username_label" = "Username";
 "lng_info_usernames_label" = "also";
+"lng_info_id_dc_label" = "User ID and data center";
 "lng_info_birthday_label" = "Date of birth";
 "lng_info_birthday_years#one" = "{date} ({count} year old)";
 "lng_info_birthday_years#other" = "{date} ({count} years old)";
