@@ -22,7 +22,7 @@ activeButtonBgOver: #d39a3a; // default active button background with mouse over
 activeButtonBgRipple: #e3ad4a; // default active button ripple effect
 activeButtonFg: #0a0907; // default active button text
 activeButtonFgOver: #0a0907; // default active button text with mouse over
-activeButtonSecondaryFg: #4b3212; // default active button additional text (selected messages counter in forward / delete buttons)
+activeButtonSecondaryFg: #30200e; // default active button additional text (selected messages counter in forward / delete buttons)
 activeButtonSecondaryFgOver: activeButtonSecondaryFg; // default active button additional text with mouse over
 activeLineFg: #e0ad50; // default active line (like code input field bottom border when you log in and field is focused)
 activeLineFgError: #ef5959; // default active line for error state (like code input field bottom border when you log in and you've entered incorrect code)
@@ -31,8 +31,8 @@ lightButtonBgOver: #18150f; // default light button background with mouse over
 lightButtonBgRipple: #272016; // default light button ripple effect
 lightButtonFg: #e0ad50; // default light button text
 lightButtonFgOver: lightButtonFg; // default light button text with mouse over
-attentionButtonFg: #ec3942; // default attention button text (like confirm button on log out)
-attentionButtonFgOver: #ec3942; // default attention button text with mouse over
+attentionButtonFg: #ff6b73; // default attention button text (like confirm button on log out)
+attentionButtonFgOver: #ff858b; // default attention button text with mouse over
 attentionButtonBgOver: #592a2a64; // default attention button background with mouse over
 attentionButtonBgRipple: #68323264; // default attention button ripple effect
 outlineButtonBg: windowBg; // default left outlined button background (like shared media links in profiles)
@@ -45,7 +45,7 @@ menuBgRipple: #2b2216; // default popup menu item ripple effect
 menuIconFg: #b18a49; // default popup menu item icon (like main menu)
 menuIconFgOver: #f0c76f; // default popup menu item icon with mouse over
 menuSubmenuArrowFg: #a9874f; // default popup menu submenu arrow icon (like in message field context menu in case of RTL system language)
-menuFgDisabled: #514b43; // default popup menu item disabled text (like unavailable items in message field context menu)
+menuFgDisabled: #968d81; // default popup menu item disabled text (like unavailable items in message field context menu)
 menuSeparatorFg: #242019; // default popup menu separator (like in message field context menu)
 scrollBarBg: #d7a54866; // default scroll bar current rectangle, the bar itself (like in chats list)
 scrollBarBgOver: #e8bc6e99; // default scroll bar current rectangle with mouse over it
@@ -55,12 +55,12 @@ smallCloseIconFg: #776e62; // small X icon (like in Show all sessions box to the
 smallCloseIconFgOver: #e0cda8; // small X icon with mouse over
 radialFg: windowFgActive; // default radial loader line (like in Media Viewer when loading a photo)
 radialBg: #00000056; // default radial loader background (like in Media Viewer when loading a photo)
-placeholderFg: #746d64; // default input field placeholder when field is not focused (like in phone input field when you log in)
+placeholderFg: #a69b8c; // default input field placeholder when field is not focused (like in phone input field when you log in)
 placeholderFgActive: #9c9182; // default input field placeholder when field is focused
 inputBorderFg: #302b23; // default input field bottom border (like in code input field when you log in and field is not focused)
 filterInputBorderFg: #9c6d27; // default rounded input field border (like in chats list search field when field is focused)
 filterInputInactiveBg: #111318; // default rounded input field background (like in chats list search field when field is inactive)
-checkboxFg: #5f574d; // default unchecked checkbox rounded rectangle (and also emoji category icons)
+checkboxFg: #968d81; // default unchecked checkbox rounded rectangle (and also emoji category icons)
 sliderBgInactive: #332e27; // default slider not active bar (like in Settings when you choose interface scale or custom notifications count)
 sliderBgActive: #c99538; // default slider active bar (like in Settings when you choose interface scale or custom notifications count)
 tooltipBg: #101216; // tooltip background (like when you put mouse over the message timestamp and wait)
@@ -98,13 +98,13 @@ cancelIconFgOver: #e9c778; // default for settings close icon and box search can
 boxBg: #0c0e12; // box background
 boxTextFg: windowFg; // box text
 boxTextFgGood: #cdab5e; // accepted box text (like when choosing username that is not occupied)
-boxTextFgError: #dc3d3d; // rejecting box text (like when choosing username that is occupied)
+boxTextFgError: #ff6b73; // rejecting box text (like when choosing username that is occupied)
 boxTitleFg: #fff2dc; // box title text
 boxSearchBg: #0c0e12; // box search field background (like in contacts box)
 boxTitleAdditionalFg: #9c9182; // box title additional text (like in create group box when you see chosen members count)
 boxTitleCloseFg: cancelIconFg; // settings close icon and box search cancel icon (like in contacts box)
 boxTitleCloseFgOver: cancelIconFgOver; // settings close icon and box search cancel icon (like in contacts box) with mouse over
-membersAboutLimitFg: #89692d; // text in channel members box about the limit (max 200 last members are shown)
+membersAboutLimitFg: #b6ab9b; // text in channel members box about the limit (max 200 last members are shown)
 contactsBg: #0c0e12; // contacts (and some other) box row background
 contactsBgOver: #17191e; // contacts (and some other) box row background with mouse over
 contactsNameFg: boxTextFg; // contacts (and some other) box row name text
@@ -374,7 +374,7 @@ overviewCheckBg: #00000066; // shared files / links checkbox background for not 
 overviewCheckFg: #f7efe3; // shared files / links checkbox icon for not selected rows when some rows are selected
 overviewCheckFgActive: #0a0907; // shared files / links checkbox icon for selected rows
 overviewPhotoSelectOverlay: #d49c3d38; // shared photos / videos / links fill for selected rows
-profileStatusFgOver: #89692d; // group members list in group profile user last seen text with mouse over
+profileStatusFgOver: #b6ab9b; // group members list in group profile user last seen text with mouse over
 profileVerifiedCheckBg: windowBgActive; // profile verified check icon background
 profileVerifiedCheckFg: #0a0907; // profile verified check icon tick
 profileAdminStartFg: #e1ae51; // group members list admin star icon

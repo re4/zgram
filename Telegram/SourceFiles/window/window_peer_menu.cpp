@@ -1205,9 +1205,17 @@ void Filler::addTranslate() {
 void Filler::addReport() {
 	const auto chat = _peer->asChat();
 	const auto channel = _peer->asChannel();
+	const auto user = _peer->asUser();
+	const auto reportableUser = user
+		&& !user->isSelf()
+		&& !user->isInaccessible()
+		&& !user->isSupport()
+		&& !user->isRepliesChat()
+		&& !user->isVerifyCodes();
 	if (_topic
 		|| ((!chat || chat->amCreator())
-			&& (!channel || channel->amCreator()))) {
+			&& (!channel || channel->amCreator())
+			&& !reportableUser)) {
 		return;
 	}
 	const auto peer = _peer;
@@ -2016,11 +2024,8 @@ void Filler::fillContextMenuActions() {
 	addToggleTopicClosed();
 	addToggleFolder();
 	addChatProfile();
-	if (const auto user = _peer->asUser()) {
-		if (!user->isContact()) {
-			addBlockUser();
-		}
-	}
+	addBlockUser();
+	addReport();
 	addLocalArchive();
 	addBanFromChannel();
 	addClearHistory();
@@ -2046,6 +2051,7 @@ void Filler::fillHistoryActions() {
 	addDirectMessages();
 	addExportChat();
 	addTranslate();
+	addBlockUser();
 	addReport();
 	addChatProfile();
 	addLocalArchive();
@@ -2818,11 +2824,15 @@ void PeerMenuBlockUserBox(
 		std::variant<v::null_t, bool> suggestReport,
 		std::variant<v::null_t, ClearChat, ClearReply> suggestClear) {
 	const auto settings = peer->barSettings().value_or(PeerBarSettings(0));
+	const auto user = peer->asUser();
 	const auto reportNeeded = v::is_null(suggestReport)
+		? (((settings & PeerBarSetting::ReportSpam) != 0)
+			|| (user && !user->isSelf() && !user->isSupport()))
+		: v::get<bool>(suggestReport);
+	const auto reportCheckedByDefault = v::is_null(suggestReport)
 		? ((settings & PeerBarSetting::ReportSpam) != 0)
 		: v::get<bool>(suggestReport);
 
-	const auto user = peer->asUser();
 	const auto name = user ? user->shortName() : peer->name();
 	if (user) {
 		box->addRow(object_ptr<Ui::FlatLabel>(
@@ -2839,7 +2849,7 @@ void PeerMenuBlockUserBox(
 		? box->addRow(object_ptr<Ui::Checkbox>(
 			box,
 			tr::lng_report_spam(tr::now),
-			true,
+			reportCheckedByDefault,
 			st::defaultBoxCheckbox))
 		: nullptr;
 

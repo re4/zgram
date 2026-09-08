@@ -425,6 +425,14 @@ bool InitializeFromSaved(Saved &&saved) {
 	}
 
 	const auto editing = ReadEditingPalette();
+	if (!editing
+		&& !saved.object.cloud.id
+		&& saved.object.pathAbsolute == u":/gui/night.tdesktop-theme"_q) {
+		auto bundled = QFile(saved.object.pathAbsolute);
+		if (bundled.open(QIODevice::ReadOnly)) {
+			saved.object.content = bundled.readAll();
+		}
+	}
 	GlobalBackground.createIfNull();
 	if (!editing && InitializeFromCache(saved.object.content, saved.cache)) {
 		return true;
