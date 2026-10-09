@@ -1459,9 +1459,12 @@ void SessionNavigation::showByInitialId(
 		clearSectionStack(instant);
 		const auto type = id.sharedMediaType;
 		const auto topic = id.thread->asTopic();
+		const auto sublist = id.thread->asSublist();
 		showSection(
 			(topic
 				? std::make_shared<Info::Memento>(topic, type)
+				: sublist
+				? std::make_shared<Info::Memento>(sublist, type)
 				: std::make_shared<Info::Memento>(id.thread->peer(), type)),
 			instant);
 		parent->widget()->setMaximumWidth(st::maxWidthSharedMediaWindow);
@@ -1520,14 +1523,14 @@ auto SessionNavigation::showToast(Ui::Toast::Config &&config)
 
 auto SessionNavigation::showToast(const QString &text, crl::time duration)
 -> base::weak_ptr<Ui::Toast::Instance> {
-	return uiShow()->showToast(text);
+	return uiShow()->showToast(text, duration);
 }
 
 auto SessionNavigation::showToast(
 	TextWithEntities &&text,
 	crl::time duration)
 -> base::weak_ptr<Ui::Toast::Instance> {
-	return uiShow()->showToast(std::move(text));
+	return uiShow()->showToast(std::move(text), duration);
 }
 
 std::shared_ptr<ChatHelpers::Show> SessionNavigation::uiShow() {
@@ -2186,6 +2189,9 @@ bool SessionController::showForumInDifferentWindow(
 		not_null<Data::Forum*> forum,
 		const SectionShow &params,
 		MsgId showAtMsgId) {
+	if (windowId().forum() == forum) {
+		return false;
+	}
 	const auto window = Core::App().windowForShowingForum(forum);
 	if (window == _window) {
 		return false;

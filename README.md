@@ -265,6 +265,11 @@ the **GNU General Public License v3** with the OpenSSL exception described in
 [LICENSE](LICENSE). Third-party notices and dependency licenses are listed in
 [LEGAL](LEGAL).
 
+Additional upstream dependencies include:
+
+- zxcvbn-c ([MIT License](https://github.com/tsyrogit/zxcvbn-c/blob/master/LICENSE.txt))
+- FrequencyWords by Hermit Dave ([Creative Commons Attribution-ShareAlike 4.0](https://creativecommons.org/licenses/by-sa/4.0/))
+
 This project is maintained independently. The Telegram name and original
 Telegram Desktop project belong to their respective owners.
 
