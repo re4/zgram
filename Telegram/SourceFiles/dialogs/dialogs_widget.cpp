@@ -2217,6 +2217,10 @@ void Widget::updateSuggestions(anim::type animated) {
 			closeSuggestions();
 		}, _suggestions->lifetime());
 
+		_suggestions->persistReleased() | rpl::on_next([=] {
+			processSearchFocusChange();
+		}, _suggestions->lifetime());
+
 		updateControlsGeometry();
 
 		_suggestions->show(animated, [=] {
@@ -4854,6 +4858,7 @@ bool Widget::redirectKeyToSearch(QKeyEvent *e) const {
 	}
 	const auto character = !(e->modifiers() & ~Qt::ShiftModifier)
 		&& (e->key() != Qt::Key_Shift)
+		&& (e->text() != u"?"_q)
 		&& RedirectTextToSearch(e->text());
 	if (character) {
 		return true;
