@@ -57,7 +57,15 @@ endif()
 add_executable(test_local_archive)
 init_target(test_local_archive "(tests)")
 
-target_include_directories(test_local_archive PRIVATE ${src_loc})
+target_include_directories(test_local_archive
+PRIVATE
+    ${src_loc}
+    $<TARGET_PROPERTY:td_scheme,INTERFACE_INCLUDE_DIRECTORIES>
+)
+
+add_dependencies(test_local_archive td_scheme)
+
+target_precompile_headers(test_local_archive PRIVATE <scheme.h>)
 
 nice_target_sources(test_local_archive ${src_loc}
 PRIVATE
@@ -72,6 +80,8 @@ target_link_libraries(test_local_archive
 PRIVATE
     desktop-app::lib_base
     desktop-app::lib_storage
+    desktop-app::lib_tl
+    desktop-app::lib_ui
     desktop-app::external_qt
 )
 

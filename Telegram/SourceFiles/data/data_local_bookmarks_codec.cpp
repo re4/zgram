@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/flat_set.h"
 
 #include <QtCore/QDataStream>
+#include <QtCore/QIODevice>
 
 namespace Data::LocalBookmarksCodec {
 namespace {

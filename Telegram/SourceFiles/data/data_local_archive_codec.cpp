@@ -8,6 +8,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_local_archive_codec.h"
 
 #include <QtCore/QDataStream>
+#include <QtCore/QIODevice>
+
+#include <range/v3/algorithm/is_sorted.hpp>
+#include <range/v3/algorithm/sort.hpp>
 
 #include <algorithm>
 

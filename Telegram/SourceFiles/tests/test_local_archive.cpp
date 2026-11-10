@@ -250,7 +250,7 @@ int main(int argc, char *argv[]) {
 	};
 	peerState.messages.emplace(MsgId(42), StoredInfo{
 		.date = entry.date,
-		.size = encoded.size(),
+		.size = qint32(encoded.size()),
 		.versions = int(entry.versions.size()),
 		.deleted = entry.deleted,
 		.hasMedia = true,
