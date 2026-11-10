@@ -100,7 +100,7 @@ public:
 
 	void markDeleted(PeerId peerId, MsgId messageId);
 	void markNonChannelDeleted(MsgId messageId);
-	void markPeerDeleted(PeerId peerId);
+	void markPeerDeleted(PeerId peerId, MsgId tillId = ServerMaxMsgId);
 	void recordEdit(FullMsgId id, QString text, TimeId observedAt = 0);
 	void forget(FullMsgId id);
 

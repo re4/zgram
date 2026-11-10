@@ -98,6 +98,7 @@ public:
 
 	[[nodiscard]] Data::HistoryMessages &messages();
 	[[nodiscard]] const Data::HistoryMessages &messages() const;
+	void enumerateMessages(Fn<void(not_null<HistoryItem*>)> action) const;
 	[[nodiscard]] Data::HistoryMessages *maybeMessages();
 
 	[[nodiscard]] HistoryStreamedDrafts &streamedDrafts();

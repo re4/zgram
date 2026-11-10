@@ -15,6 +15,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_peer.h"
 #include "history/history.h"
 #include "history/history_item.h"
+#include "history/history_item_components.h"
 #include "main/main_session.h"
 #include "storage/storage_account.h"
 
@@ -28,7 +29,9 @@ namespace {
 constexpr auto kPrefKey = "local-bookmarks-v1";
 constexpr auto kMaxBookmarks = 1000;
 
-[[nodiscard]] bool Eligible(not_null<const HistoryItem*> item) {
+[[nodiscard]] bool Eligible(
+		not_null<const HistoryItem*> item,
+		bool allowCleared = false) {
 	const auto peer = item->history()->peer.get();
 	const auto media = item->media();
 	return peer->allowsForwarding()
@@ -38,7 +41,8 @@ constexpr auto kMaxBookmarks = 1000;
 		&& !peer->isServiceUser()
 		&& IsServerMsgId(item->id)
 		&& item->isRegular()
-		&& !item->isService()
+		&& (!item->isService()
+			|| (allowCleared && item->Has<HistoryServiceClearHistory>()))
 		&& !item->isEphemeral()
 		&& !item->forbidsSaving()
 		&& !item->ttlDestroyAt()
@@ -83,7 +87,7 @@ public:
 	void recordEdit(FullMsgId id, QString text);
 	void markDeleted(PeerId peerId, MsgId messageId);
 	void markNonChannelDeleted(MsgId messageId);
-	void markPeerDeleted(PeerId peerId);
+	void markPeerDeleted(PeerId peerId, MsgId tillId);
 
 private:
 	void setupEvents();
@@ -213,11 +217,11 @@ void LocalBookmarks::Impl::markNonChannelDeleted(MsgId messageId) {
 	}
 }
 
-void LocalBookmarks::Impl::markPeerDeleted(PeerId peerId) {
+void LocalBookmarks::Impl::markPeerDeleted(PeerId peerId, MsgId tillId) {
 	auto changed = false;
 	const auto now = base::unixtime::now();
 	for (auto &[id, entry] : _entries) {
-		if (id.peer == peerId && !entry.deleted) {
+		if (id.peer == peerId && id.msg <= tillId && !entry.deleted) {
 			entry.deleted = true;
 			entry.deletedAt = now;
 			changed = true;
@@ -231,8 +235,9 @@ void LocalBookmarks::Impl::markPeerDeleted(PeerId peerId) {
 
 void LocalBookmarks::Impl::setupEvents() {
 	using Flag = MessageUpdate::Flag;
-	_session->changes().messageUpdates(
-		Flag::NewMaybeAdded | Flag::Edited
+	rpl::merge(
+		_session->changes().realtimeMessageUpdates(Flag::NewMaybeAdded),
+		_session->changes().realtimeMessageUpdates(Flag::Edited)
 	) | rpl::on_next([=](const MessageUpdate &update) {
 		if (_entries.contains(update.item->fullId())) {
 			this->update(update.item);
@@ -264,6 +269,10 @@ void LocalBookmarks::Impl::setupEvents() {
 void LocalBookmarks::Impl::update(not_null<HistoryItem*> item) {
 	const auto i = _entries.find(item->fullId());
 	if (i == end(_entries)) {
+		return;
+	} else if (item->Has<HistoryServiceClearHistory>()
+		&& Eligible(item, true)) {
+		markDeleted(item->history()->peer->id, item->id);
 		return;
 	} else if (!Eligible(item)) {
 		remove(item->fullId());
@@ -347,8 +356,8 @@ void LocalBookmarks::markNonChannelDeleted(MsgId messageId) {
 	_impl->markNonChannelDeleted(messageId);
 }
 
-void LocalBookmarks::markPeerDeleted(PeerId peerId) {
-	_impl->markPeerDeleted(peerId);
+void LocalBookmarks::markPeerDeleted(PeerId peerId, MsgId tillId) {
+	_impl->markPeerDeleted(peerId, tillId);
 }
 
 } // namespace Data

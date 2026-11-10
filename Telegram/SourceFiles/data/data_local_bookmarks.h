@@ -56,7 +56,7 @@ public:
 	void recordEdit(FullMsgId id, QString text);
 	void markDeleted(PeerId peerId, MsgId messageId);
 	void markNonChannelDeleted(MsgId messageId);
-	void markPeerDeleted(PeerId peerId);
+	void markPeerDeleted(PeerId peerId, MsgId tillId = ServerMaxMsgId);
 
 private:
 	class Impl;

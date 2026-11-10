@@ -211,6 +211,14 @@ int main(int argc, char *argv[]) {
 	passed &= Check(
 		entry.deletedAt == 1'700'000'004,
 		"deletion timestamp retention");
+	const auto deletedRoundTrip = DeserializeEntry(SerializeEntry(entry));
+	passed &= Check(
+		deletedRoundTrip
+			&& deletedRoundTrip->deleted
+			&& deletedRoundTrip->versions.size() == 2
+			&& deletedRoundTrip->versions.front().text == u"Before"_q
+			&& deletedRoundTrip->versions.back().text == u"After"_q,
+		"deleted messages retain their archived text and edit history");
 
 	passed &= Check(
 		RetentionSeconds(LocalArchiveRetention::Week) == 7 * 24 * 60 * 60,
@@ -419,9 +427,15 @@ int main(int argc, char *argv[]) {
 			"encrypted database rejects wrong key");
 		passed &= Check(Open(database, TestKey()), "encrypted database reopen");
 		const auto persisted = Get(database, firstKey);
+		const auto persistedEntry = persisted
+			? DeserializeEntry(*persisted)
+			: std::nullopt;
 		passed &= Check(
-			persisted && DeserializeEntry(*persisted).has_value(),
-			"archive persistence after reopen");
+			persistedEntry
+				&& persistedEntry->deleted
+				&& persistedEntry->versions.size() == 2
+				&& persistedEntry->versions.back().text == u"After"_q,
+			"deleted archive persists after encrypted database reopen");
 		const auto persistedJournal = Get(database, journalKey);
 		passed &= Check(
 			persistedJournal

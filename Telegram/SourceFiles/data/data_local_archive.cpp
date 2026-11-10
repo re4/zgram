@@ -16,8 +16,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_local_archive_codec.h"
 #include "data/data_media_types.h"
 #include "data/data_peer.h"
+#include "data/data_session.h"
 #include "history/history.h"
 #include "history/history_item.h"
+#include "history/history_item_components.h"
 #include "main/main_session.h"
 #include "storage/cache/storage_cache_database.h"
 #include "storage/storage_account.h"
@@ -58,6 +60,7 @@ struct Mutation {
 	std::optional<QString> editedText;
 	bool allowCreate = false;
 	bool deletion = false;
+	bool peerDeletion = false;
 	TimeId eventAt = 0;
 	uint64 peerGeneration = 0;
 	uint64 messageGeneration = 0;
@@ -99,20 +102,28 @@ struct PendingQueue {
 		&& !peer->isServiceUser();
 }
 
+[[nodiscard]] bool EligibleMessage(
+		not_null<const HistoryItem*> item,
+		bool allowCleared = false) {
+	const auto media = item->media();
+	return EligiblePeer(item->history()->peer)
+		&& IsServerMsgId(item->id)
+		&& item->isRegular()
+		&& (!item->isService()
+			|| (allowCleared && item->Has<HistoryServiceClearHistory>()))
+		&& !item->isEphemeral()
+		&& !item->forbidsSaving()
+		&& !item->ttlDestroyAt()
+		&& !(media && media->ttlSeconds());
+}
+
 [[nodiscard]] std::optional<Snapshot> SnapshotFrom(
 		not_null<const HistoryItem*> item) {
-	const auto peer = item->history()->peer.get();
-	const auto media = item->media();
-	if (!EligiblePeer(peer)
-		|| !IsServerMsgId(item->id)
-		|| !item->isRegular()
-		|| item->isService()
-		|| item->isEphemeral()
-		|| item->forbidsSaving()
-		|| item->ttlDestroyAt()
-		|| (media && media->ttlSeconds())) {
+	if (!EligibleMessage(item)) {
 		return std::nullopt;
 	}
+	const auto peer = item->history()->peer.get();
+	const auto media = item->media();
 	const auto sender = item->from();
 	return Snapshot{
 		.id = item->fullId(),
@@ -214,7 +225,7 @@ public:
 	void clearStorage();
 	void markDeleted(PeerId peerId, MsgId messageId);
 	void markNonChannelDeleted(MsgId messageId);
-	void markPeerDeleted(PeerId peerId);
+	void markPeerDeleted(PeerId peerId, MsgId tillId);
 	void recordEdit(FullMsgId id, QString text, TimeId observedAt);
 	void forget(FullMsgId id);
 	void load(
@@ -234,6 +245,7 @@ private:
 		QByteArray data);
 	void finishLoading(base::flat_map<PeerId, PeerState> peers);
 	void archive(not_null<HistoryItem*> item, bool allowCreate);
+	void archiveLoaded(PeerId peerId);
 	void enqueue(Mutation mutation);
 	void processPending(FullMsgId id);
 	void processMorePending();
@@ -288,7 +300,6 @@ private:
 		std::pair<QString, LocalArchiveRetention>> _deferredRetentions;
 	std::vector<Mutation> _deferred;
 	std::vector<PeerId> _deferredClears;
-	std::vector<PeerId> _deferredPeerDeletions;
 	std::vector<FullMsgId> _deferredRemovals;
 	base::Timer _pruneTimer;
 	rpl::variable<bool> _ready = false;
@@ -401,6 +412,9 @@ void LocalArchive::Impl::setRetention(
 	}
 	if (!ready()) {
 		_deferredRetentions[peer->id] = { peer->name(), retention };
+		if (retention != LocalArchiveRetention::Off) {
+			archiveLoaded(peer->id);
+		}
 		return;
 	}
 	auto i = _peers.find(peer->id);
@@ -414,6 +428,9 @@ void LocalArchive::Impl::setRetention(
 		i->second.retention = retention;
 	}
 	prunePeer(peer->id, base::unixtime::now(), true);
+	if (retention != LocalArchiveRetention::Off) {
+		archiveLoaded(peer->id);
+	}
 	if (i->second.retention == LocalArchiveRetention::Off
 		&& i->second.messages.empty()) {
 		_peers.erase(i);
@@ -456,7 +473,6 @@ void LocalArchive::Impl::clearAll() {
 		_clearAllRequested = true;
 		_deferred.clear();
 		_deferredClears.clear();
-		_deferredPeerDeletions.clear();
 		_deferredRemovals.clear();
 		return;
 	}
@@ -467,7 +483,6 @@ void LocalArchive::Impl::clearAll() {
 	_messageGenerations.clear();
 	_deferred.clear();
 	_deferredClears.clear();
-	_deferredPeerDeletions.clear();
 	_deferredRemovals.clear();
 	for (auto i = _peers.begin(); i != _peers.end();) {
 		++i->second.generation;
@@ -495,7 +510,6 @@ void LocalArchive::Impl::clearStorage() {
 	_deferred.clear();
 	_deferredRetentions.clear();
 	_deferredClears.clear();
-	_deferredPeerDeletions.clear();
 	_deferredRemovals.clear();
 	_database->clear();
 	_database->sync();
@@ -533,9 +547,12 @@ void LocalArchive::Impl::markNonChannelDeleted(MsgId messageId) {
 	}
 }
 
-void LocalArchive::Impl::markPeerDeleted(PeerId peerId) {
+void LocalArchive::Impl::markPeerDeleted(PeerId peerId, MsgId tillId) {
 	if (!ready()) {
-		_deferredPeerDeletions.push_back(peerId);
+		_deferred.push_back(Mutation{
+			.id = { peerId, tillId },
+			.peerDeletion = true,
+		});
 		return;
 	}
 	const auto i = _peers.find(peerId);
@@ -545,7 +562,7 @@ void LocalArchive::Impl::markPeerDeleted(PeerId peerId) {
 	auto ids = std::vector<MsgId>();
 	ids.reserve(i->second.messages.size());
 	for (const auto &[messageId, info] : i->second.messages) {
-		if (!info.deleted) {
+		if (messageId <= tillId && !info.deleted) {
 			ids.push_back(messageId);
 		}
 	}
@@ -575,7 +592,7 @@ void LocalArchive::Impl::forget(FullMsgId id) {
 		_deferred.erase(ranges::remove_if(
 			_deferred,
 			[=](const Mutation &mutation) {
-				return mutation.id == id;
+				return !mutation.peerDeletion && mutation.id == id;
 			}), end(_deferred));
 		_deferredRemovals.push_back(id);
 		return;
@@ -706,8 +723,10 @@ void LocalArchive::Impl::search(
 
 void LocalArchive::Impl::setupEvents() {
 	using Flag = MessageUpdate::Flag;
-	_session->changes().messageUpdates(
-		Flag::NewAdded | Flag::NewMaybeAdded | Flag::Edited
+	rpl::merge(
+		_session->changes().realtimeMessageUpdates(Flag::NewAdded),
+		_session->changes().realtimeMessageUpdates(Flag::NewMaybeAdded),
+		_session->changes().realtimeMessageUpdates(Flag::Edited)
 	) | rpl::on_next([=](const MessageUpdate &update) {
 		const auto allowCreate = bool(
 			update.flags & (Flag::NewAdded | Flag::NewMaybeAdded));
@@ -843,6 +862,7 @@ void LocalArchive::Impl::finishLoading(
 		return;
 	}
 	auto changed = false;
+	const auto clearedAll = _clearAllRequested;
 	if (_clearAllRequested) {
 		_journal.clear();
 		for (auto i = peers.begin(); i != peers.end();) {
@@ -876,7 +896,8 @@ void LocalArchive::Impl::finishLoading(
 	if (changed) {
 		saveMetadata();
 	}
-	for (const auto peerId : base::take(_deferredClears)) {
+	const auto clearedPeers = base::take(_deferredClears);
+	for (const auto peerId : clearedPeers) {
 		clear(peerId);
 	}
 	for (const auto id : base::take(_deferredRemovals)) {
@@ -884,14 +905,20 @@ void LocalArchive::Impl::finishLoading(
 	}
 	auto deferred = base::take(_deferred);
 	for (auto &mutation : deferred) {
-		if (mutation.deletion && !mutation.id.peer) {
+		if (mutation.peerDeletion) {
+			markPeerDeleted(mutation.id.peer, mutation.id.msg);
+		} else if (mutation.deletion && !mutation.id.peer) {
 			markNonChannelDeleted(mutation.id.msg);
 		} else {
 			enqueue(std::move(mutation));
 		}
 	}
-	for (const auto peerId : base::take(_deferredPeerDeletions)) {
-		markPeerDeleted(peerId);
+	for (const auto &[peerId, peer] : _peers) {
+		if (!clearedAll
+			&& !ranges::contains(clearedPeers, peerId)
+			&& peer.retention != LocalArchiveRetention::Off) {
+			archiveLoaded(peerId);
+		}
 	}
 	_changes.fire({});
 }
@@ -899,6 +926,11 @@ void LocalArchive::Impl::finishLoading(
 void LocalArchive::Impl::archive(
 		not_null<HistoryItem*> item,
 		bool allowCreate) {
+	if (item->Has<HistoryServiceClearHistory>()
+		&& EligibleMessage(item, true)) {
+		markDeleted(item->history()->peer->id, item->id);
+		return;
+	}
 	const auto snapshot = SnapshotFrom(item);
 	if (!snapshot) {
 		if (IsServerMsgId(item->id)) {
@@ -917,6 +949,14 @@ void LocalArchive::Impl::archive(
 		return;
 	}
 	enqueue(std::move(mutation));
+}
+
+void LocalArchive::Impl::archiveLoaded(PeerId peerId) {
+	if (const auto history = _session->data().historyLoaded(peerId)) {
+		history->enumerateMessages([=](not_null<HistoryItem*> item) {
+			archive(item, true);
+		});
+	}
 }
 
 void LocalArchive::Impl::enqueue(Mutation mutation) {
@@ -1484,8 +1524,8 @@ void LocalArchive::markNonChannelDeleted(MsgId messageId) {
 	_impl->markNonChannelDeleted(messageId);
 }
 
-void LocalArchive::markPeerDeleted(PeerId peerId) {
-	_impl->markPeerDeleted(peerId);
+void LocalArchive::markPeerDeleted(PeerId peerId, MsgId tillId) {
+	_impl->markPeerDeleted(peerId, tillId);
 }
 
 void LocalArchive::recordEdit(

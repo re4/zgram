@@ -4511,7 +4511,16 @@ void History::clear(ClearType type, bool markEmpty) {
 	owner().sendHistoryChangeNotifications();
 }
 
+void History::enumerateMessages(
+		Fn<void(not_null<HistoryItem*>)> action) const {
+	for (const auto &item : _items) {
+		action(item.get());
+	}
+}
+
 void History::clearUpTill(MsgId availableMinId) {
+	session().data().localArchive().markPeerDeleted(peer->id, availableMinId);
+	session().data().localBookmarks().markPeerDeleted(peer->id, availableMinId);
 	Tgw::ClearHistoryStorage(this, availableMinId);
 	auto remove = std::vector<not_null<HistoryItem*>>();
 	remove.reserve(_items.size());
