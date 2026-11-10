@@ -501,97 +501,83 @@ void CommandPaletteBox(
 void BuildPowerUserSection(SectionBuilder &builder) {
 	const auto controller = builder.controller();
 
-	ModernUi::AddHero(builder, {
-		.title = tr::lng_power_user_title(),
-		.description = tr::lng_power_user_about(),
-		.badge = tr::lng_power_user_device_badge(),
-		.icon = &st::menuIconSettings,
-	});
-	ModernUi::AddSectionTitle(
-		builder,
-		tr::lng_power_user_appearance(),
-		true);
-	ModernUi::AddAction(builder, {
+	builder.addSkip();
+	builder.addSubsectionTitle(tr::lng_power_user_appearance());
+	builder.addButton({
 		.id = u"power_user/layout"_q,
 		.title = tr::lng_power_user_layout(),
-		.description = tr::lng_power_user_layout_about(),
-		.badge = PowerUser::LayoutValue() | rpl::map(LayoutText),
 		.icon = { &st::menuIconChatBubble },
-		.clicked = [=] {
+		.label = PowerUser::LayoutValue() | rpl::map(LayoutText),
+		.onClick = [=] {
 			if (controller) {
 				ShowLayoutBox(controller);
 			}
 		},
 		.keywords = { u"compact"_q, u"comfortable"_q, u"density"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/bubble_radius"_q,
 		.title = tr::lng_power_user_bubble_radius(),
-		.description = tr::lng_power_user_bubble_radius_about(),
-		.badge = Ui::UseSmallBubbleRadiusValue() | rpl::map([](bool small) {
+		.icon = { &st::menuIconChatBubble },
+		.label = Ui::UseSmallBubbleRadiusValue() | rpl::map([](bool small) {
 			return small
 				? tr::lng_power_user_bubble_compact(tr::now)
 				: tr::lng_power_user_bubble_round(tr::now);
 		}),
-		.icon = { &st::menuIconChatBubble },
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				ShowBubbleRadiusBox(controller);
 			}
 		},
 		.keywords = { u"messages"_q, u"corners"_q, u"radius"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/sidebar"_q,
 		.title = tr::lng_power_user_sidebar(),
-		.description = tr::lng_power_user_sidebar_about(),
-		.badge = rpl::single(
+		.icon = { &st::menuIconShowInFolder },
+		.label = rpl::single(
 			Core::App().settings().dialogsWithChatWidthRatio()
 		) | rpl::then(
 			Core::App().settings().dialogsWithChatWidthRatioChanges()
 		) | rpl::map([](float64 ratio) {
 			return SidebarWidthText(SidebarWidthIndex(ratio));
 		}),
-		.icon = { &st::menuIconShowInFolder },
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				ShowSidebarWidthBox(controller);
 			}
 		},
 		.keywords = { u"dialogs"_q, u"width"_q, u"column"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/transparency"_q,
 		.title = tr::lng_power_user_transparency(),
-		.description = tr::lng_power_user_transparency_about(),
-		.badge = PowerUser::TransparencyValue()
-			| rpl::map(TransparencyText),
 		.icon = { &st::menuIconChangeColors },
-		.clicked = [=] {
+		.label = PowerUser::TransparencyValue()
+			| rpl::map(TransparencyText),
+		.onClick = [=] {
 			if (controller) {
 				ShowTransparencyBox(controller);
 			}
 		},
 		.keywords = { u"blur"_q, u"glass"_q, u"opacity"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/colors"_q,
 		.title = tr::lng_power_user_colors(),
-		.description = tr::lng_power_user_colors_about(),
 		.icon = { &st::menuIconChangeColors },
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				controller->showSettings(ChatId());
 			}
 		},
 		.keywords = { u"accent"_q, u"theme"_q, u"color"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/wallpaper"_q,
 		.title = tr::lng_power_user_wallpaper(),
-		.description = tr::lng_power_user_wallpaper_about(),
 		.icon = { &st::menuIconPhoto },
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				controller->show(Box<BackgroundBox>(controller));
 			}
@@ -599,83 +585,85 @@ void BuildPowerUserSection(SectionBuilder &builder) {
 		.keywords = { u"background"_q, u"image"_q, u"blur"_q },
 	});
 
-	ModernUi::AddSectionTitle(builder, tr::lng_power_user_actions());
-	ModernUi::AddAction(builder, {
+	builder.addSkip();
+	builder.addDivider();
+	builder.addSkip();
+	builder.addSubsectionTitle(tr::lng_power_user_actions());
+	builder.addButton({
 		.id = u"power_user/corner_reply"_q,
 		.title = tr::lng_settings_chat_corner_reply(),
-		.description = tr::lng_power_user_reply_about(),
-		.icon = &st::menuIconReply,
+		.icon = { &st::menuIconReply },
 		.toggled = Core::App().settings().cornerReplyValue(),
-		.toggleCallback = [](bool checked) {
-			Core::App().settings().setCornerReply(checked);
+		.onClick = [] {
+			auto &settings = Core::App().settings();
+			settings.setCornerReply(!settings.cornerReply());
 			Core::App().saveSettingsDelayed();
 		},
 		.keywords = { u"hover"_q, u"message"_q, u"reply"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/corner_reaction"_q,
 		.title = tr::lng_settings_chat_corner_reaction(),
-		.description = tr::lng_power_user_reaction_about(),
-		.icon = &st::menuIconReactions,
+		.icon = { &st::menuIconReactions },
 		.toggled = Core::App().settings().cornerReactionValue(),
-		.toggleCallback = [](bool checked) {
-			Core::App().settings().setCornerReaction(checked);
+		.onClick = [] {
+			auto &settings = Core::App().settings();
+			settings.setCornerReaction(!settings.cornerReaction());
 			Core::App().saveSettingsDelayed();
 		},
 		.keywords = { u"hover"_q, u"message"_q, u"reaction"_q },
 	});
 
-	ModernUi::AddSectionTitle(builder, tr::lng_power_user_tools());
-	ModernUi::AddAction(builder, {
+	builder.addSkip();
+	builder.addDivider();
+	builder.addSkip();
+	builder.addSubsectionTitle(tr::lng_power_user_tools());
+	builder.addButton({
 		.id = u"power_user/command_palette"_q,
 		.title = tr::lng_power_user_command_palette(),
-		.description = tr::lng_power_user_command_palette_about(),
-		.badge = rpl::single(CommandPaletteShortcutText()),
 		.icon = { &st::menuIconSearch },
-		.clicked = [=] {
+		.label = rpl::single(CommandPaletteShortcutText()),
+		.onClick = [=] {
 			if (controller) {
 				ShowCommandPalette(controller);
 			}
 		},
 		.keywords = { u"commands"_q, u"keyboard"_q, u"search"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/workspaces"_q,
 		.title = tr::lng_power_user_workspaces(),
-		.description = tr::lng_power_user_workspaces_about(),
 		.icon = { &st::menuIconShowInFolder },
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				controller->showSettings(FoldersId());
 			}
 		},
 		.keywords = { u"workspaces"_q, u"folders"_q, u"tabs"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/archive"_q,
 		.title = tr::lng_local_archive_title(),
-		.description = tr::lng_power_user_archive_about(),
 		.icon = { &st::menuIconGroupLog },
-		.tone = ModernUi::Tone::Accent,
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				controller->showSettings(LocalArchiveId());
 			}
 		},
 		.keywords = { u"archive"_q, u"messages"_q, u"logging"_q },
 	});
-	ModernUi::AddAction(builder, {
+	builder.addButton({
 		.id = u"power_user/bookmarks"_q,
 		.title = tr::lng_local_bookmarks_title(),
-		.description = tr::lng_power_user_bookmarks_about(),
 		.icon = { &st::menuIconFave },
-		.clicked = [=] {
+		.onClick = [=] {
 			if (controller) {
 				ShowLocalBookmarks(controller);
 			}
 		},
 		.keywords = { u"bookmarks"_q, u"saved"_q, u"local"_q },
 	});
+	builder.addSkip();
 }
 
 class PowerUserSettings : public Section<PowerUserSettings> {
@@ -704,10 +692,7 @@ PowerUserSettings::PowerUserSettings(
 	not_null<Window::SessionController*> controller)
 : Section(parent, controller) {
 	const auto content = Ui::CreateChild<Ui::VerticalLayout>(this);
-	const auto inner = content->add(
-		object_ptr<Ui::VerticalLayout>(content),
-		st::zgramPagePadding);
-	build(inner, kPowerUserSection);
+	build(content, kPowerUserSection);
 	Ui::ResizeFitChild(this, content);
 }
 
