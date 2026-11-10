@@ -27,15 +27,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 namespace Info::Media {
 
-std::optional<int> TypeToTabIndex(Type type) {
-	switch (type) {
-	case Type::Photo: return 0;
-	case Type::Video: return 1;
-	case Type::File: return 2;
-	}
-	return std::nullopt;
-}
-
 Type TabIndexToType(int index) {
 	switch (index) {
 	case 0: return Type::Photo;
@@ -63,8 +54,6 @@ tr::phrase<> SharedMediaTitle(Type type) {
 		return tr::lng_media_type_audios;
 	case Type::Link:
 		return tr::lng_media_type_links;
-	case Type::RoundFile:
-		return tr::lng_media_type_rounds;
 	case Type::Poll:
 		return tr::lng_media_type_polls;
 	}

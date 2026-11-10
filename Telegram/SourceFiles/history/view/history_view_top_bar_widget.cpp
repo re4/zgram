@@ -221,8 +221,9 @@ TopBarWidget::TopBarWidget(
 		| UpdateFlag::Rights
 		| UpdateFlag::EmojiStatus
 		| UpdateFlag::Name
+		| UpdateFlag::BarSettings
 	) | rpl::on_next([=](const Data::PeerUpdate &update) {
-		if ((update.flags & UpdateFlag::Name)
+		if ((update.flags & (UpdateFlag::Name | UpdateFlag::BarSettings))
 			&& (update.peer == titleNamePeer())) {
 			TopBarWidget::update();
 		}
@@ -1028,6 +1029,13 @@ void TopBarWidget::setActiveChat(
 				update();
 			}, _activeChatLifetime);
 
+			session().changes().topicUpdates(
+				topic,
+				Data::TopicUpdate::Flag::Title
+			) | rpl::on_next([=] {
+				update();
+			}, _activeChatLifetime);
+
 			// _menuToggle visibility depends on "View topic info",
 			// "View topic info" visibility depends on activeChatCurrent.
 			_controller->activeChatChanges(
@@ -1408,10 +1416,13 @@ void TopBarWidget::updateControlsVisibility() {
 
 
 	const auto isOneColumn = _controller->adaptive().isOneColumn();
+
+	// MainWidget is already gone while the window clears its widgets.
+	const auto main = _controller->widget()->sessionContent();
 	const auto backVisible = !rootChatsListBar()
 		&& (isOneColumn
 			|| (_activeChat.section == Section::ChatsList)
-			|| !_controller->content()->stackIsEmpty());
+			|| (main && !main->stackIsEmpty()));
 	_back->setVisible(backVisible && !_chooseForReportReason);
 	_cancelChoose->setVisible(_chooseForReportReason.has_value());
 	updateInfoButtonVisibility();

@@ -120,6 +120,8 @@ struct HistoryMessageRichPage
 	mutable Iv::Markdown::MediaActivation handlerMediaActivation;
 	mutable Iv::Markdown::PreparedPlaceholderBlockId handlerPlaceholderId;
 	mutable QPoint handlerPlaceholderPoint;
+	mutable Iv::Markdown::PreparedPlaceholderBlockId pressedPlaceholderId;
+	mutable ClickHandlerPtr pressedPlaceholderHandler;
 	mutable Iv::Markdown::MarkdownArticleButtonRowHit handlerButtonRow;
 	mutable ClickHandlerPtr handlerButtonRowHandler;
 	mutable Iv::Markdown::MarkdownArticleButtonRowHit pressedButtonRow;
@@ -285,7 +287,8 @@ public:
 	[[nodiscard]] bool toggleSelectionByHandlerClick(
 		const ClickHandlerPtr &handler) const override;
 	[[nodiscard]] bool allowTextSelectionByHandler(
-		const ClickHandlerPtr &handler) const override;
+		const ClickHandlerPtr &handler,
+		bool fromTouch) const override;
 	[[nodiscard]] int infoWidth() const override;
 	[[nodiscard]] int bottomInfoFirstLineWidth() const override;
 	[[nodiscard]] bool bottomInfoIsWide() const override;
@@ -534,6 +537,8 @@ private:
 	[[nodiscard]] int rightBadgeWidth() const;
 	void validateFromNameText(PeerData *from) const;
 	void ensureFromNameStatusLink(not_null<PeerData*> peer) const;
+	[[nodiscard]] EmojiStatusId fromNameStatusId(
+		not_null<PeerData*> from) const;
 
 	mutable std::unique_ptr<RightAction> _rightAction;
 	mutable ClickHandlerPtr _fastReplyLink;
