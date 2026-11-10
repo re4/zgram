@@ -3390,7 +3390,6 @@ std::unique_ptr<Ui::DropdownMenu> MakeAttachBotsMenu(
 		}, &st::menuIconSoundOn);
 	}
 	if (Data::CanSend(peer, ChatRestriction::SendVoiceMessages, false)) {
-		++minimal;
 		raw->addAction(tr::lng_all_voice(tr::now), [=] {
 			ChooseAndSendVoice(
 				controller,
