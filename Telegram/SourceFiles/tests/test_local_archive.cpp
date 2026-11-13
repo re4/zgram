@@ -10,6 +10,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_local_bookmarks_codec.h"
 #include "storage/cache/storage_cache_database.h"
 #include "storage/storage_encryption.h"
+#include "tests/test_local_archive_store.h"
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDataStream>
@@ -461,5 +462,6 @@ int main(int argc, char *argv[]) {
 		passed &= Check(Close(database), "final database close");
 	}
 
+	passed &= TestLocalArchiveStore(argc, argv);
 	return passed ? 0 : 1;
 }

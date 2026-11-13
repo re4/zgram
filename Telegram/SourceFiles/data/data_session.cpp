@@ -3097,7 +3097,12 @@ void Session::updateEditedMessage(const MTPMessage &data) {
 	});
 	if (!existing) {
 		data.match([](const MTPDmessageEmpty &) {
-		}, [](const MTPDmessageService &) {
+		}, [&](const MTPDmessageService &message) {
+			if (message.vaction().type() == mtpc_messageActionHistoryClear) {
+				localArchive().markDeleted(
+					peerFromMTP(message.vpeer_id()),
+					message.vid().v);
+			}
 		}, [&](const MTPDmessage &message) {
 			const auto id = FullMsgId(
 				peerFromMTP(message.vpeer_id()),
@@ -3115,7 +3120,6 @@ void Session::updateEditedMessage(const MTPMessage &data) {
 			if (message.is_noforwards()
 				|| (period && period->v > 0)
 				|| expiringMedia) {
-				localArchive().forget(id);
 				localBookmarks().remove(id);
 			} else {
 				localArchive().recordEdit(

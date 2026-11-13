@@ -71,9 +71,13 @@ nice_target_sources(test_local_archive ${src_loc}
 PRIVATE
     data/data_local_archive_codec.cpp
     data/data_local_archive_codec.h
+    data/data_local_archive_store.cpp
+    data/data_local_archive_store.h
     data/data_local_bookmarks_codec.cpp
     data/data_local_bookmarks_codec.h
     tests/test_local_archive.cpp
+    tests/test_local_archive_store.cpp
+    tests/test_local_archive_store.h
 )
 
 target_link_libraries(test_local_archive

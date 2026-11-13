@@ -771,6 +771,8 @@ PRIVATE
     data/data_local_archive.h
     data/data_local_archive_codec.cpp
     data/data_local_archive_codec.h
+    data/data_local_archive_store.cpp
+    data/data_local_archive_store.h
     data/data_local_bookmarks.cpp
     data/data_local_bookmarks.h
     data/data_local_bookmarks_codec.cpp
