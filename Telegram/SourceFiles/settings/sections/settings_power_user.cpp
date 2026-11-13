@@ -37,6 +37,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/widgets/labels.h"
 #include "ui/wrap/vertical_layout.h"
 #include "ui/vertical_list.h"
+#include "window/window_columns.h"
 #include "window/window_session_controller.h"
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
@@ -227,7 +228,7 @@ void ShowBubbleRadiusBox(
 void ShowSidebarWidthBox(
 		not_null<Window::SessionController*> controller) {
 	controller->show(Box([=](not_null<Ui::GenericBox*> box) {
-		auto &settings = Core::App().settings();
+		auto &columns = controller->columns();
 		SingleChoiceBox(box, {
 			.title = tr::lng_power_user_sidebar(),
 			.options = {
@@ -236,13 +237,13 @@ void ShowSidebarWidthBox(
 				tr::lng_power_user_sidebar_wide(tr::now),
 			},
 			.initialSelection = SidebarWidthIndex(
-				settings.dialogsWithChatWidthRatio()),
-			.callback = [](int index) {
+				columns.dialogsWidthRatio(false)),
+			.callback = [=](int index) {
 				constexpr auto kValues = std::array{ .28, 5. / 14., .42 };
 				const auto ratio = kValues[std::clamp(index, 0, 2)];
-				auto &settings = Core::App().settings();
-				settings.updateDialogsWidthRatio(ratio, false);
-				settings.updateDialogsWidthRatio(ratio, true);
+				auto &columns = controller->columns();
+				columns.updateDialogsWidthRatio(ratio, false);
+				columns.updateDialogsWidthRatio(ratio, true);
 				Core::App().saveSettingsDelayed();
 			},
 		});
@@ -500,6 +501,17 @@ void CommandPaletteBox(
 
 void BuildPowerUserSection(SectionBuilder &builder) {
 	const auto controller = builder.controller();
+	auto sidebarWidth = rpl::producer<QString>();
+	if (controller) {
+		const auto &columns = controller->columns();
+		sidebarWidth = rpl::single(
+			columns.dialogsWidthRatio(false)
+		) | rpl::then(
+			columns.dialogsWithChatWidthRatioChanges()
+		) | rpl::map([](float64 ratio) {
+			return SidebarWidthText(SidebarWidthIndex(ratio));
+		});
+	}
 
 	builder.addSkip();
 	builder.addSubsectionTitle(tr::lng_power_user_appearance());
@@ -535,13 +547,7 @@ void BuildPowerUserSection(SectionBuilder &builder) {
 		.id = u"power_user/sidebar"_q,
 		.title = tr::lng_power_user_sidebar(),
 		.icon = { &st::menuIconShowInFolder },
-		.label = rpl::single(
-			Core::App().settings().dialogsWithChatWidthRatio()
-		) | rpl::then(
-			Core::App().settings().dialogsWithChatWidthRatioChanges()
-		) | rpl::map([](float64 ratio) {
-			return SidebarWidthText(SidebarWidthIndex(ratio));
-		}),
+		.label = std::move(sidebarWidth),
 		.onClick = [=] {
 			if (controller) {
 				ShowSidebarWidthBox(controller);
