@@ -274,7 +274,11 @@ bool RecoverPurge(Storage::Databases &databases, const QString &path) {
 				SerializeJournal(journal), std::move(done));
 		}), "write interrupted purge journal");
 		database.sync();
-		database.close();
+		passed &= Check(DatabaseCall([&](auto done) {
+			database.close([done = std::move(done)]() mutable {
+				done(Storage::Cache::Error::NoError());
+			});
+		}), "close recovery fixture");
 	}
 	for (auto attempt = 0; attempt != 2; ++attempt) {
 		auto store = LocalArchiveStore(databases.get(path, TestSettings()), TestKey());
