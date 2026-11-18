@@ -185,6 +185,8 @@ PRIVATE
     api/api_messages_search.h
     api/api_messages_search_merged.cpp
     api/api_messages_search_merged.h
+    api/api_own_group_messages.cpp
+    api/api_own_group_messages.h
     api/api_peer_colors.cpp
     api/api_peer_colors.h
     api/api_peer_photo.cpp

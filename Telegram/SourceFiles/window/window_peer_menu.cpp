@@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "api/api_chat_participants.h"
 #include "api/api_communities.h"
 #include "api/api_global_privacy.h"
+#include "api/api_own_group_messages.h"
 #include "lang/lang_keys.h"
 #include "lottie/lottie_icon.h"
 #include "ui/boxes/confirm_box.h"
@@ -320,6 +321,7 @@ private:
 	void addToggleArchive();
 	void addChatProfile();
 	void addLocalArchive();
+	void addDeleteMyMessages();
 	void addClearHistory();
 	void addDeleteChat();
 	void addLeaveChat();
@@ -965,6 +967,71 @@ void Filler::addChatProfile() {
 				},
 			});
 		},
+	});
+}
+
+void ShowDeleteMyMessagesResult(
+		const std::shared_ptr<ChatHelpers::Show> &show,
+		not_null<PeerData*> peer,
+		Api::OwnGroupMessages::Result result) {
+	using Result = Api::OwnGroupMessages::Result;
+	if (!show->valid() || result == Result::Silent) {
+		return;
+	}
+	const auto phrase = [&] {
+		switch (result) {
+		case Result::Deleted: return tr::lng_group_delete_my_messages_done;
+		case Result::Empty: return tr::lng_group_delete_my_messages_empty;
+		case Result::Partial: return tr::lng_group_delete_my_messages_partial;
+		case Result::Failed: return tr::lng_group_delete_my_messages_failed;
+		case Result::Busy: return tr::lng_group_delete_my_messages_busy;
+		case Result::Silent: break;
+		}
+		Unexpected("Result in ShowDeleteMyMessagesResult.");
+	}();
+	show->showToast(phrase(tr::now, lt_group, peer->name()));
+}
+
+void ConfirmDeleteMyMessages(
+		const std::shared_ptr<ChatHelpers::Show> &show,
+		not_null<PeerData*> peer) {
+	using Result = Api::OwnGroupMessages::Result;
+	if (show->showFrozenError()) {
+		return;
+	} else if (peer->session().api().ownGroupMessages().busy(peer)) {
+		ShowDeleteMyMessagesResult(show, peer, Result::Busy);
+		return;
+	}
+	const auto confirm = peer->isForum()
+		? tr::lng_group_delete_my_messages_sure_forum
+		: tr::lng_group_delete_my_messages_sure;
+	show->show(Ui::MakeConfirmBox({
+		.text = confirm(tr::now, lt_group, tr::bold(peer->name()), tr::rich),
+		.confirmed = [=](Fn<void()> close) {
+			close();
+			ShowDeleteMyMessagesResult(show, peer, Result::Busy);
+			peer->session().api().ownGroupMessages().clear(peer, [=](Result result) {
+				ShowDeleteMyMessagesResult(show, peer, result);
+			});
+		},
+		.confirmText = tr::lng_box_delete(),
+		.confirmStyle = &st::attentionBoxButton,
+		.title = tr::lng_group_delete_my_messages(),
+	}));
+}
+
+void Filler::addDeleteMyMessages() {
+	if (!_peer || _topic || _sublist
+		|| !Api::OwnGroupMessages::CanDelete(_peer)) {
+		return;
+	}
+	const auto peer = not_null<PeerData*>(_peer);
+	const auto show = _controller->uiShow();
+	_addAction({
+		.text = tr::lng_group_delete_my_messages(tr::now),
+		.handler = [=] { ConfirmDeleteMyMessages(show, peer); },
+		.icon = &st::menuIconDeleteAttention,
+		.isAttention = true,
 	});
 }
 
@@ -1991,6 +2058,7 @@ void Filler::fillChatsListActions() {
 	_addAction(PeerMenuCallback::Args{ .isSeparator = true });
 	addReport();
 	if (_peer->asChannel()->amIn()) {
+		addDeleteMyMessages();
 		addLeaveChat();
 	} else {
 		addJoinChat();
@@ -2071,6 +2139,7 @@ void Filler::fillHistoryActions() {
 	addReport();
 	addChatProfile();
 	addLocalArchive();
+	addDeleteMyMessages();
 	addClearHistory();
 	addDeleteChat();
 	addLeaveChat();
@@ -2103,6 +2172,7 @@ void Filler::fillProfileActions() {
 	addBlockUser();
 	addBanFromChannel();
 	addReport();
+	addDeleteMyMessages();
 	addLeaveChat();
 	addDeleteContact();
 	addDeleteTopic();

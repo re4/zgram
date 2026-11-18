@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "api/api_hash.h"
 #include "api/api_invite_links.h"
 #include "api/api_media.h"
+#include "api/api_own_group_messages.h"
 #include "api/api_peer_colors.h"
 #include "api/api_peer_photo.h"
 #include "api/api_polls.h"
@@ -264,6 +265,7 @@ ApiWrap::ApiWrap(not_null<Main::Session*> session)
 , _todoLists(std::make_unique<Api::TodoLists>(this))
 , _richTasks(std::make_unique<Api::RichTasks>(this))
 , _chatParticipants(std::make_unique<Api::ChatParticipants>(this))
+, _ownGroupMessages(std::make_unique<Api::OwnGroupMessages>(this))
 , _communities(std::make_unique<Api::Communities>(this))
 , _unreadThings(std::make_unique<Api::UnreadThings>(this))
 , _ringtones(std::make_unique<Api::Ringtones>(this))
@@ -5913,6 +5915,10 @@ Api::RichTasks &ApiWrap::richTasks() {
 
 Api::ChatParticipants &ApiWrap::chatParticipants() {
 	return *_chatParticipants;
+}
+
+Api::OwnGroupMessages &ApiWrap::ownGroupMessages() {
+	return *_ownGroupMessages;
 }
 
 Api::Communities &ApiWrap::communities() {

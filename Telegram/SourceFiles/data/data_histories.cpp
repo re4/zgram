@@ -824,24 +824,34 @@ bool Histories::postponeEntryRequest(const State &state) const {
 void Histories::deleteMessages(
 		not_null<History*> history,
 		const QVector<MTPint> &ids,
-		bool revoke) {
+		bool revoke,
+		Fn<void(const MTP::Error*)> completed) {
 	sendRequest(history, RequestType::Delete, [=](Fn<void()> finish) {
 		const auto done = [=](const MTPmessages_AffectedMessages &result) {
 			session().api().applyAffectedMessages(history->peer, result);
 			finish();
 			history->requestChatListMessage();
+			if (completed) {
+				completed(nullptr);
+			}
+		};
+		const auto fail = [=](const MTP::Error &error) {
+			finish();
+			if (completed) {
+				completed(&error);
+			}
 		};
 		if (const auto channel = history->peer->asChannel()) {
 			return session().api().request(MTPchannels_DeleteMessages(
 				channel->inputChannel(),
 				MTP_vector<MTPint>(ids)
-			)).done(done).fail(finish).send();
+			)).done(done).fail(fail).send();
 		} else {
 			using Flag = MTPmessages_DeleteMessages::Flag;
 			return session().api().request(MTPmessages_DeleteMessages(
 				MTP_flags(revoke ? Flag::f_revoke : Flag(0)),
 				MTP_vector<MTPint>(ids)
-			)).done(done).fail(finish).send();
+			)).done(done).fail(fail).send();
 		}
 	});
 }

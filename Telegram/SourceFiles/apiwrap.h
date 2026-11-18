@@ -89,6 +89,7 @@ class Polls;
 class TodoLists;
 class RichTasks;
 class ChatParticipants;
+class OwnGroupMessages;
 class Communities;
 class UnreadThings;
 class Ringtones;
@@ -470,6 +471,7 @@ public:
 	[[nodiscard]] Api::TodoLists &todoLists();
 	[[nodiscard]] Api::RichTasks &richTasks();
 	[[nodiscard]] Api::ChatParticipants &chatParticipants();
+	[[nodiscard]] Api::OwnGroupMessages &ownGroupMessages();
 	[[nodiscard]] Api::Communities &communities();
 	[[nodiscard]] Api::UnreadThings &unreadThings();
 	[[nodiscard]] Api::Ringtones &ringtones();
@@ -849,6 +851,7 @@ private:
 	const std::unique_ptr<Api::TodoLists> _todoLists;
 	const std::unique_ptr<Api::RichTasks> _richTasks;
 	const std::unique_ptr<Api::ChatParticipants> _chatParticipants;
+	const std::unique_ptr<Api::OwnGroupMessages> _ownGroupMessages;
 	const std::unique_ptr<Api::Communities> _communities;
 	const std::unique_ptr<Api::UnreadThings> _unreadThings;
 	const std::unique_ptr<Api::Ringtones> _ringtones;

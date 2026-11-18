@@ -89,7 +89,8 @@ public:
 	void deleteMessages(
 		not_null<History*> history,
 		const QVector<MTPint> &ids,
-		bool revoke);
+		bool revoke,
+		Fn<void(const MTP::Error*)> completed = nullptr);
 	void deleteAllMessages(
 		not_null<History*> history,
 		MsgId deleteTillId,

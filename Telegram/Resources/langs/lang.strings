@@ -9249,4 +9249,13 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_tgw_copied" = "Copied: {text}";
 "lng_in_dlg_widget" = "Widget";
 
+"lng_group_delete_my_messages" = "Delete my messages";
+"lng_group_delete_my_messages_sure" = "Delete the messages you sent as yourself in {group} for everyone? This cannot be undone.";
+"lng_group_delete_my_messages_sure_forum" = "Delete the messages you sent as yourself across all topics in {group} for everyone? This cannot be undone.";
+"lng_group_delete_my_messages_busy" = "Deleting your messages in {group}…";
+"lng_group_delete_my_messages_done" = "Your messages in {group} were deleted.";
+"lng_group_delete_my_messages_empty" = "No messages from you were found in {group}.";
+"lng_group_delete_my_messages_partial" = "Some of your messages in {group} couldn't be deleted for everyone.";
+"lng_group_delete_my_messages_failed" = "Couldn't finish deleting your messages in {group}. You can try again.";
+
 // Keys finished
