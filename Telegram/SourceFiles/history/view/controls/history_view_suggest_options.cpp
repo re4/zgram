@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "boxes/star_gift_box.h"
 #include "chat_helpers/compose/compose_show.h"
 #include "core/ui_integration.h"
+#include "core/larp_zone.h"
 #include "data/components/credits.h"
 #include "data/stickers/data_custom_emoji.h"
 #include "data/data_channel.h"
@@ -98,6 +99,7 @@ void ChooseSuggestTimeBox(
 		.min = [=] { return now + min; },
 		.time = value,
 		.max = [=] { return now + max; },
+		.timeZone = LarpZone::TimeZone(),
 	});
 
 	box->addLeftButton((args.mode == SuggestMode::Publish)
@@ -605,7 +607,7 @@ void ChooseSuggestPriceBox(
 			tr::lng_suggest_options_date(),
 			state->date.value() | rpl::map([](TimeId date) {
 				return date
-					? langDateTime(base::unixtime::parse(date))
+					? langDateTime(LarpZone::ChatTime(date))
 					: tr::lng_suggest_options_date_any(tr::now);
 			}),
 			st::settingsButtonNoIcon);
@@ -935,7 +937,7 @@ TextWithEntities SuggestOptionsBar::composeText(
 		: helper.paletteDependent(
 			Ui::Earn::IconCreditsEmojiSmall()
 		).append(Lang::FormatCreditsAmountDecimal(_values.price()));
-	const auto date = langDateTime(base::unixtime::parse(_values.date));
+	const auto date = langDateTime(LarpZone::ChatTime(_values.date));
 	if (!_values.price() && !_values.date) {
 		return tr::lng_suggest_bar_text(tr::now, tr::marked);
 	} else if (!_values.date) {

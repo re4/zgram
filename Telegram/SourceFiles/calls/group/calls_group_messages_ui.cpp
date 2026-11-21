@@ -18,6 +18,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "chat_helpers/tabbed_panel.h"
 #include "chat_helpers/tabbed_selector.h"
 #include "core/ui_integration.h"
+#include "core/larp_zone.h"
 #include "data/stickers/data_custom_emoji.h"
 #include "data/stickers/data_stickers.h"
 #include "data/data_document.h"
@@ -205,12 +206,12 @@ void ReceiveSomeMouseEvents(
 		TimeId value) {
 	const auto parent = menu->menu();
 
-	const auto parsed = base::unixtime::parse(value);
+	const auto parsed = LarpZone::ChatTime(value);
 	const auto date = parsed.date();
 	const auto time = QLocale().toString(
 		parsed.time(),
 		QLocale::ShortFormat);
-	const auto today = QDateTime::currentDateTime().date();
+	const auto today = LarpZone::Now().date();
 	const auto text = (date == today)
 		? tr::lng_context_sent_today(tr::now, lt_time, time)
 		: (date.addDays(1) == today)

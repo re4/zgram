@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "countries/countries_instance.h"
 
+#include <QtCore/QTimeZone>
 #include <QtCore/QLocale>
 #include <locale>
 #include <sstream>
@@ -18,6 +19,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 namespace Ui {
 namespace {
+
+[[nodiscard]] QDateTime NowInZoneOf(const QDateTime &date) {
+	const auto now = QDateTime::currentDateTime();
+	return (date.timeSpec() == Qt::LocalTime) ? now : now.toTimeZone(date.timeZone());
+}
 
 constexpr auto kSecondsInYear = 365 * 24 * 60 * 60; // 31536000
 
@@ -80,7 +86,7 @@ QString FormatProgressText(qint64 ready, qint64 total) {
 }
 
 QString FormatDateTime(QDateTime date) {
-	const auto now = QDateTime::currentDateTime();
+	const auto now = NowInZoneOf(date);
 	if (date.date() == now.date()) {
 		return tr::lng_mediaview_today(
 			tr::now,
@@ -102,7 +108,7 @@ QString FormatDateTime(QDateTime date) {
 }
 
 QString FormatDateTimeSavedFrom(QDateTime dateTime) {
-	const auto current = QDate::currentDate();
+	const auto current = NowInZoneOf(dateTime).date();
 	const auto date = dateTime.date();
 	const auto timeStr = QLocale().toString(
 		dateTime.time(),
@@ -725,7 +731,7 @@ QString FormatDialogsDate(const QDateTime &lastTime) {
 	// Show all dates that are in the last 20 hours in time format.
 	constexpr int kRecentlyInSeconds = 20 * 3600;
 
-	const auto now = QDateTime::currentDateTime();
+	const auto now = NowInZoneOf(lastTime);
 	const auto nowDate = now.date();
 	const auto lastDate = lastTime.date();
 

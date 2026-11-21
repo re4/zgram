@@ -97,6 +97,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/stickers/data_custom_emoji.h"
 #include "chat_helpers/message_field.h" // FactcheckFieldIniter.
 #include "core/file_utilities.h"
+#include "core/larp_zone.h"
 #include "core/click_handler_types.h"
 #include "base/platform/base_platform_info.h"
 #include "base/call_delayed.h"
@@ -2220,7 +2221,7 @@ void FillPollOptionPage(
 		menu->addSeparator(&st::expandedMenuSeparator);
 		const auto date = a->addedDate
 			? Ui::FormatDateTime(
-				base::unixtime::parse(a->addedDate))
+				LarpZone::ChatTime(a->addedDate))
 			: QString();
 		auto action = base::make_unique_q<Ui::WhoReactedEntryAction>(
 			menu->menu(),
@@ -2521,7 +2522,7 @@ void AddWhenEditedForwardedAuthorActionHelper(
 				menu->addSeparator(&st::expandedMenuSeparator);
 			}
 			if (item->history()->session().messagePrimaryEditedDate()) {
-				const auto sent = base::unixtime::parse(item->date());
+				const auto sent = LarpZone::ChatTime(item->date());
 				auto label = base::make_unique_q<Ui::Menu::MultilineAction>(
 					menu->menu(),
 					menu->st().menu,

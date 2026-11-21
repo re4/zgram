@@ -14,6 +14,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/platform/base_platform_file_utilities.h"
 #include "ui/main_queue_processor.h"
 #include "core/crash_reports.h"
+#include "core/larp_zone.h"
 #include "core/update_checker.h"
 #include "core/sandbox.h"
 #include "core/version.h"
@@ -399,6 +400,7 @@ int Launcher::exec() {
 	// Must be started before Platform is started.
 	Logs::start();
 	base::options::init(cWorkingDir() + "tdata/experimental_options.json");
+	LarpZone::Start();
 
 	// Must be called after options are inited.
 	initHighDpi();

@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/media/history_view_suggest_decision.h"
 
-#include "base/unixtime.h"
+#include "core/larp_zone.h"
 #include "data/data_channel.h"
 #include "data/data_session.h"
 #include "history/view/media/history_view_media_generic.h"
@@ -189,7 +189,7 @@ auto GenerateSuggestDecisionMedia(
 				),
 				st::chatSuggestInfoTitleMargin,
 				style::al_top);
-			const auto date = base::unixtime::parse(decision->date);
+			const auto date = LarpZone::ChatTime(decision->date);
 			pushText(
 				TextWithEntities(
 				).append(Emoji(kCalendar)).append(' ').append(
@@ -345,7 +345,7 @@ auto GenerateSuggestRequestMedia(
 				? tr::lng_suggest_change_time_label
 				: tr::lng_suggest_action_time_label)(tr::now),
 			tr::bold(suggest->date
-				? Ui::FormatDateTime(base::unixtime::parse(suggest->date))
+				? Ui::FormatDateTime(LarpZone::ChatTime(suggest->date))
 				: tr::lng_suggest_action_time_any(tr::now)),
 		});
 		push(std::make_unique<AttributeTable>(

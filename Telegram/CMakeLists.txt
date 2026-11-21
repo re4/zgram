@@ -619,6 +619,8 @@ PRIVATE
     core/external_control.h
     core/file_utilities.cpp
     core/file_utilities.h
+    core/larp_zone.cpp
+    core/larp_zone.h
     core/launcher.cpp
     core/launcher.h
     core/local_url_handlers.cpp

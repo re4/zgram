@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "api/api_who_reacted.h"
 
+#include "core/larp_zone.h"
 #include "api/api_global_privacy.h"
 #include "history/history_item.h"
 #include "history/history.h"
@@ -703,9 +704,9 @@ QString FormatReadDate(TimeId date, const QDateTime &now) {
 	if (!date) {
 		return {};
 	}
-	const auto parsed = base::unixtime::parse(date);
+	const auto parsed = LarpZone::ChatTime(date);
 	const auto readDate = parsed.date();
-	const auto nowDate = now.date();
+	const auto nowDate = now.toTimeZone(LarpZone::TimeZone()).date();
 	if (readDate == nowDate) {
 		return tr::lng_mediaview_today(
 			tr::now,

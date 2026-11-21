@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/unixtime.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/click_handler_types.h"
 #include "core/ui_integration.h" // TextContext
 #include "lang/lang_keys.h"
@@ -794,7 +795,7 @@ TextState TodoList::textState(QPoint point, StateRequest request) const {
 				using Flag = Ui::Text::StateRequest::Flag;
 				if (request.flags & Flag::LookupCustomTooltip) {
 					result.customTooltipText = langDateTimeFull(
-						base::unixtime::parse(task.completionDate));
+						LarpZone::ChatTime(task.completionDate));
 				}
 			}
 			return result;

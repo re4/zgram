@@ -7,7 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/history_inner_widget_accessibility.h"
 
-#include "base/unixtime.h"
+#include "core/larp_zone.h"
 #include "data/data_document.h"
 #include "data/data_game.h"
 #include "data/data_media_types.h"
@@ -1064,7 +1064,7 @@ QString MessageSubItemValue(
 			return {};
 		}
 		if (fwd->originalDate) {
-			const auto dt = base::unixtime::parse(fwd->originalDate);
+			const auto dt = LarpZone::ChatTime(fwd->originalDate);
 			return QLocale().toString(dt, QLocale::ShortFormat);
 		}
 		return {};

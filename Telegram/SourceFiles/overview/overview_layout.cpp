@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "overview/overview_layout_delegate.h"
 #include "apiwrap.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/click_handler_types.h"
 #include "core/ui_integration.h" // TextContext
 #include "data/data_document.h"
@@ -38,7 +39,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/media/history_view_media_common.h"
 #include "history/view/media/history_view_document.h" // DrawThumbnailAsSongCover
 #include "iv/iv_instance.h"
-#include "base/unixtime.h"
 #include "boxes/sticker_set_box.h"
 #include "ui/effects/round_checkbox.h"
 #include "ui/effects/spoiler_mess.h"
@@ -1034,7 +1034,7 @@ Voice::Voice(
 
 	updateName();
 	const auto dateText = tr::link(
-		langDateTime(base::unixtime::parse(parent->date()))); // Link 1.
+		langDateTime(dateTime())); // Link 1.
 	_details.setMarkedText(
 		st::defaultTextStyle,
 		tr::lng_date_and_duration(
@@ -1381,7 +1381,7 @@ Document::Document(
 , _generic(::Layout::DocumentGenericPreview::Create(_data))
 , _externalLoading(std::move(fields.externalLoading))
 , _forceFileLayout(fields.forceFileLayout)
-, _date(langDateTime(base::unixtime::parse(fields.dateOverride
+, _date(langDateTime(LarpZone::ChatTime(fields.dateOverride
 	? fields.dateOverride
 	: parent->date())))
 , _ext(_generic.ext)

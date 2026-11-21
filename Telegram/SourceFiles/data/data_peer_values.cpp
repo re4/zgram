@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "data/data_peer_values.h"
 
+#include "core/larp_zone.h"
 #include "lang/lang_keys.h"
 #include "data/data_channel.h"
 #include "data/data_chat.h"
@@ -46,8 +47,8 @@ int OnlinePhraseChangeInSeconds(LastseenStatus status, TimeId now) {
 	if (hours < 12) {
 		return (hours + 1) * 3600 - (now - till);
 	}
-	const auto nowFull = base::unixtime::parse(now);
-	const auto tomorrow = nowFull.date().addDays(1).startOfDay();
+	const auto nowFull = LarpZone::ChatTime(now);
+	const auto tomorrow = nowFull.date().addDays(1).startOfDay(LarpZone::TimeZone());
 	return std::max(static_cast<TimeId>(nowFull.secsTo(tomorrow)), 0);
 }
 
@@ -501,8 +502,8 @@ QString OnlineText(Data::LastseenStatus status, TimeId now) {
 	if (hours < 12) {
 		return tr::lng_status_lastseen_hours(tr::now, lt_count, hours);
 	}
-	const auto onlineFull = base::unixtime::parse(till);
-	const auto nowFull = base::unixtime::parse(now);
+	const auto onlineFull = LarpZone::ChatTime(till);
+	const auto nowFull = LarpZone::ChatTime(now);
 	const auto locale = QLocale();
 	if (onlineFull.date() == nowFull.date()) {
 		const auto onlineTime = locale.toString(onlineFull.time(), QLocale::ShortFormat);
@@ -529,8 +530,8 @@ QString OnlineTextFull(not_null<UserData*> user, TimeId now) {
 		return *common;
 	}
 	const auto till = user->lastseen().onlineTill();
-	const auto onlineFull = base::unixtime::parse(till);
-	const auto nowFull = base::unixtime::parse(now);
+	const auto onlineFull = LarpZone::ChatTime(till);
+	const auto nowFull = LarpZone::ChatTime(now);
 	const auto locale = QLocale();
 	if (onlineFull.date() == nowFull.date()) {
 		const auto onlineTime = locale.toString(onlineFull.time(), QLocale::ShortFormat);

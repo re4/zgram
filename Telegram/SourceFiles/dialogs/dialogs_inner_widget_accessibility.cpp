@@ -25,6 +25,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history_item.h"
 #include "history/history_item_components.h"
 #include "history/history_item_helpers.h"
+#include "core/larp_zone.h"
 #include "lang/lang_keys.h"
 #include "main/main_session.h"
 #include "ui/text/format_values.h"
@@ -133,7 +134,7 @@ namespace {
 	}
 
 	if (dateTime.isValid()) {
-		const auto now = QDateTime::currentDateTime();
+		const auto now = LarpZone::Now();
 		QString timeText;
 		if (dateTime.date() == now.date()) {
 			timeText = tr::lng_schedule_at(tr::now)
@@ -496,7 +497,7 @@ QString SubItemValue(
 		if (!dateTime.isValid()) {
 			return {};
 		}
-		const auto now = QDateTime::currentDateTime();
+		const auto now = LarpZone::Now();
 		if (dateTime.date() == now.date()) {
 			return QLocale().toString(
 				dateTime.time(),

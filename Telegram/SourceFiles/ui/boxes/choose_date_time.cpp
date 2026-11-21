@@ -33,10 +33,10 @@ namespace {
 
 constexpr auto kMinimalSchedule = TimeId(10);
 
-QString DayString(const QDate &date) {
+QString DayString(const QDate &date, const QTimeZone &zone) {
 	const auto month = Lang::MonthDay(date.month())(tr::now);
 	const auto day = QString::number(date.day());
-	if (date.year() != QDate::currentDate().year()) {
+	if (date.year() != QDateTime::currentDateTimeUtc().toTimeZone(zone).date().year()) {
 		return tr::lng_month_day_year(
 			tr::now,
 			lt_month,
@@ -66,12 +66,12 @@ QDate DateFollowingTimeWheel(
 		return date;
 	} else if (was.hour() == 23
 		&& now.hour() == 0
-		&& QDateTime(date, now) < minimum) {
+		&& QDateTime(date, now, minimum.timeZone()) < minimum) {
 		return std::clamp(date.addDays(1), minDate, maxDate);
 	} else if (was.hour() == 0
 		&& now.hour() == 23
 		&& date == minDate.addDays(1)
-		&& QDateTime(minDate, now) >= minimum) {
+		&& QDateTime(minDate, now, minimum.timeZone()) >= minimum) {
 		return std::clamp(date.addDays(-1), minDate, maxDate);
 	}
 	return date;
@@ -169,12 +169,15 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 	const auto min = args.min ? args.min : [] {
 		return base::unixtime::now() + kMinimalSchedule;
 	};
-	const auto max = args.max ? args.max : [] {
+	const auto zone = args.timeZone;
+	const auto max = args.max ? args.max : [=] {
 		return base::unixtime::serialize(
-			QDateTime::currentDateTime().addYears(1)) - 1;
+			QDateTime::currentDateTimeUtc().toTimeZone(zone).addYears(1)) - 1;
 	};
-	const auto parsed = base::unixtime::parse(
-		std::clamp(args.time, min(), max()));
+	const auto parse = [=](TimeId date) {
+		return base::unixtime::parse(date).toTimeZone(zone);
+	};
+	const auto parsed = parse(std::clamp(args.time, min(), max()));
 	const auto state = box->lifetime().make_state<State>(State{
 		.date = parsed.date(),
 		.day = CreateChild<InputField>(
@@ -198,16 +201,16 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 
 	state->date.value(
 	) | rpl::on_next([=](QDate date) {
-		state->day->setText(DayString(date));
+		state->day->setText(DayString(date, zone));
 		dayEdit->setAlignment(dayAlign);
 		state->time->setFocusFast();
 	}, state->day->lifetime());
 
 	const auto minDate = [=] {
-		return base::unixtime::parse(min()).date();
+		return parse(min()).date();
 	};
 	const auto maxDate = [=] {
-		return base::unixtime::parse(max()).date();
+		return parse(max()).date();
 	};
 
 	const auto &dayViewport = state->day->rawTextEdit()->viewport();
@@ -241,7 +244,7 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 			state->date.current(),
 			*lastTime,
 			time,
-			base::unixtime::parse(min()),
+			parse(min()),
 			maxDate());
 		*lastTime = time;
 	}, state->time->lifetime());
@@ -316,8 +319,15 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 		if (!time.isValid()) {
 			return 0;
 		}
-		const auto result = base::unixtime::serialize(
-			QDateTime(state->date.current(), time));
+		const auto date = state->date.current();
+		const auto original = parsed.addSecs(-parsed.time().second());
+		const auto chosen = (date == original.date() && time == original.time())
+			? original
+			: QDateTime(date, time, zone);
+		if (!chosen.isValid() || chosen.date() != date || chosen.time() != time) {
+			return 0;
+		}
+		const auto result = base::unixtime::serialize(chosen);
 		if (result < min() || result > max()) {
 			return 0;
 		}

@@ -19,6 +19,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "boxes/premium_preview_box.h"
 #include "calls/calls_instance.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/click_handler_types.h"
 #include "core/core_screenshot_protection.h"
 #include "core/file_utilities.h"
@@ -1850,14 +1851,14 @@ void OverlayWidget::updateControls() {
 	_recognizeNavIcon = style::centerrect(_recognizeNav, st::mediaviewRecognize);
 	Assert(st::mediaviewSave.size() == st::mediaviewSaveLocked.size());
 
-	const auto dNow = QDateTime::currentDateTime();
+	const auto dNow = LarpZone::Now();
 	const auto d = [&] {
 		if (_message) {
 			return ItemDateTime(_message);
 		} else if (_photo) {
-			return base::unixtime::parse(_photo->date());
+			return LarpZone::ChatTime(_photo->date());
 		} else if (_document) {
-			return base::unixtime::parse(_document->date);
+			return LarpZone::ChatTime(_document->date);
 		}
 		return dNow;
 	}();

@@ -32,6 +32,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "inline_bots/bot_attach_web_view.h"
 #include "history/history.h"
 #include "history/history_item.h"
+#include "history/history_item_helpers.h"
 #include "history/view/reactions/history_view_reactions.h"
 //#include "history/view/reactions/history_view_reactions_button.h"
 #include "history/view/history_view_chat_section.h"
@@ -76,6 +77,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "chat_helpers/tabbed_selector.h"
 #include "chat_helpers/emoji_interactions.h"
 #include "core/shortcuts.h"
+#include "core/larp_zone.h"
 #include "core/application.h"
 #include "core/core_screenshot_protection.h"
 #include "core/click_handler_types.h"
@@ -3057,7 +3059,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 	const auto currentPeerDate = [&] {
 		if (topic) {
 			if (const auto item = topic->lastMessage()) {
-				return base::unixtime::parse(item->date()).date();
+				return ItemDateTime(item).date();
 			}
 			return QDate();
 		} else if (history->scrollTopItem) {
@@ -3073,14 +3075,14 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 				}
 			}
 		} else if (const auto item = history->lastMessage()) {
-			return base::unixtime::parse(item->date()).date();
+			return ItemDateTime(item).date();
 		}
 		return QDate();
 	}();
 	const auto maxPeerDate = [&] {
 		if (topic) {
 			if (const auto item = topic->lastMessage()) {
-				return base::unixtime::parse(item->date()).date();
+				return ItemDateTime(item).date();
 			}
 			return QDate();
 		}
@@ -3088,7 +3090,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 			? history->owner().historyLoaded(history->peer->migrateTo())
 			: history;
 		if (const auto item = check ? check->lastMessage() : nullptr) {
-			return base::unixtime::parse(item->date()).date();
+			return ItemDateTime(item).date();
 		}
 		return QDate();
 	}();
@@ -3098,7 +3100,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 			return QDate(2013, 8, 1);
 		};
 		if (topic) {
-			return base::unixtime::parse(topic->creationDate()).date();
+			return LarpZone::ChatTime(topic->creationDate()).date();
 		} else if (const auto chat = history->peer->migrateFrom()) {
 			if (const auto history = chat->owner().historyLoaded(chat)) {
 				if (history->loadedAtTop()) {
@@ -3114,7 +3116,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 			if (!history->isEmpty()) {
 				return history->blocks.front()->messages.front()->dateTime().date();
 			}
-			return QDate::currentDate();
+			return LarpZone::Now().date();
 		}
 		return startDate();
 	}();
@@ -3122,7 +3124,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 		? requestedDate
 		: !currentPeerDate.isNull()
 		? currentPeerDate
-		: QDate::currentDate();
+		: LarpZone::Now().date();
 	const auto performJump = descriptor.customJump;
 	struct ButtonState {
 		enum class Type {
@@ -3202,11 +3204,11 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 				: Storage::SharedMediaType::Video);
 		const auto factory = [=](QDate date, Ui::CalendarImageSetter set) {
 			search->monthThumbnails(
-				base::unixtime::serialize(QDateTime(date, QTime())),
+				base::unixtime::serialize(date.startOfDay(LarpZone::TimeZone())),
 				[=](const std::vector<Api::DayThumbnail> &thumbnails) {
 					for (const auto &thumb : thumbnails) {
 						set(
-							base::unixtime::parse(thumb.date).date(),
+							LarpZone::ChatTime(thumb.date).date(),
 							thumb.image);
 					}
 				});
@@ -3215,7 +3217,7 @@ void SessionController::showCalendar(ShowCalendarDescriptor &&descriptor) {
 		if (const auto performJump = descriptor.customJump) {
 			customJump = [=](const QDate &d, Fn<void()> close) {
 				const auto date = base::unixtime::serialize(
-					QDateTime(d, QTime()));
+					d.startOfDay(LarpZone::TimeZone()));
 				if (const auto msgId = search->resolveMsgIdByDate(date)) {
 					performJump(FullMsgId(history->peer->id, *msgId), close);
 				}

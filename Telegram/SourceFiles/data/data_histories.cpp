@@ -34,6 +34,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/history_view_element.h"
 #include "iv/iv_rich_page.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "apiwrap.h"
 
 namespace Data {
@@ -938,16 +939,16 @@ void Histories::deleteMessagesByDates(
 		QDate firstDayToDelete,
 		QDate lastDayToDelete,
 		bool revoke) {
-	const auto firstSecondToDelete = base::unixtime::serialize(
-		{ firstDayToDelete, QTime(0, 0) }
-	);
-	const auto lastSecondToDelete = base::unixtime::serialize(
-		{ lastDayToDelete, QTime(23, 59, 59) }
-	);
+	const auto &zone = LarpZone::TimeZone();
+	const auto first = firstDayToDelete.startOfDay(zone);
+	const auto last = lastDayToDelete.endOfDay(zone);
+	if (!first.isValid() || !last.isValid() || first > last) {
+		return;
+	}
 	deleteMessagesByDates(
 		history,
-		firstSecondToDelete - 1,
-		lastSecondToDelete + 1,
+		base::unixtime::serialize(first) - 1,
+		base::unixtime::serialize(last) + 1,
 		revoke);
 }
 

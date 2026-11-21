@@ -31,11 +31,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/qt/qt_common_adapters.h"
 #include "base/qt/qt_key_modifiers.h"
 #include "base/event_filter.h"
-#include "base/unixtime.h"
 #include "base/call_delayed.h"
 #include "mainwindow.h"
 #include "mainwidget.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "apiwrap.h"
 #include "api/api_chat_participants.h"
 #include "api/api_attached_stickers.h"
@@ -838,7 +838,7 @@ QString InnerWidget::tooltipText() const {
 					tr::now,
 					lt_date,
 					QLocale().toString(
-						base::unixtime::parse(sentIt->second),
+						LarpZone::ChatTime(sentIt->second),
 						QLocale::LongFormat));
 			}
 			return dateText;

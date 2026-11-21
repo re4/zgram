@@ -10,7 +10,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "dialogs/dialogs_key.h"
 #include "dialogs/dialogs_indexed_list.h"
 #include "base/options.h"
-#include "base/unixtime.h"
 #include "data/data_changes.h"
 #include "data/data_session.h"
 #include "data/data_folder.h"
@@ -18,6 +17,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_chat_filters.h"
 #include "data/data_saved_sublist.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/core_settings.h"
 #include "mainwidget.h"
 #include "main/main_session.h"
@@ -348,11 +348,11 @@ DateText ResolveDateText(
 	static int LastTodaySerial = 0;
 	if (!now || LastNow != now) {
 		LastNow = now;
-		LastTodaySerial = int(QDate::currentDate().toJulianDay());
+		LastTodaySerial = int(LarpZone::Now().date().toJulianDay());
 	}
 	if (cache.messageTimeId != date
 		|| cache.todaySerial != LastTodaySerial) {
-		const auto qdt = base::unixtime::parse(date);
+		const auto qdt = LarpZone::ChatTime(date);
 		cache.text = Ui::FormatDialogsDate(qdt);
 		cache.width = st::dialogsDateFont->width(cache.text);
 		cache.messageTimeId = date;

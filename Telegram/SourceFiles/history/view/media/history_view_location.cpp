@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/media/history_view_location.h"
 
+#include "core/larp_zone.h"
 #include "base/unixtime.h"
 #include "history/history.h"
 #include "history/history_item_components.h"
@@ -213,11 +214,11 @@ void Location::updateLiveStatus() {
 			next = 3600 - (elapsed % 3600);
 			return tr::lng_live_location_hours(tr::now, lt_count, hours);
 		}
-		const auto dateFull = base::unixtime::parse(date);
-		const auto nowFull = base::unixtime::parse(now);
+		const auto dateFull = LarpZone::ChatTime(date);
+		const auto nowFull = LarpZone::ChatTime(now);
 		const auto nextTomorrow = [&] {
 			const auto tomorrow = nowFull.date().addDays(1);
-			next = nowFull.secsTo(QDateTime(tomorrow, QTime(0, 0)));
+			next = nowFull.secsTo(tomorrow.startOfDay(LarpZone::TimeZone()));
 		};
 		const auto locale = QLocale();
 		const auto format = QLocale::ShortFormat;

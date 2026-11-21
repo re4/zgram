@@ -39,6 +39,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "apiwrap.h"
 #include "media/audio/media_audio.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "wallet/wallet_address.h"
 #include "wallet/wallet_fiat.h"
 #include "wallet/wallet_panel.h"
@@ -8943,11 +8944,11 @@ PreparedServiceText HistoryItem::prepareCallScheduledText(
 	const auto call = Get<HistoryServiceOngoingCall>();
 	Assert(call != nullptr);
 
-	const auto scheduled = base::unixtime::parse(scheduleDate);
+	const auto scheduled = LarpZone::ChatTime(scheduleDate);
 	const auto date = scheduled.date();
-	const auto now = QDateTime::currentDateTime();
+	const auto now = LarpZone::Now();
 	const auto secsToDateAddDays = [&](int days) {
-		return now.secsTo(QDateTime(date.addDays(days), QTime(0, 0)));
+		return now.secsTo(date.addDays(days).startOfDay(LarpZone::TimeZone()));
 	};
 	auto result = PreparedServiceText();
 	const auto prepareWithDate = [&](const QString &date) {

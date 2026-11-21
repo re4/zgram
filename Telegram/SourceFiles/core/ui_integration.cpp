@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "api/api_text_entities.h"
 #include "core/local_url_handlers.h"
+#include "core/larp_zone.h"
 #include "core/file_utilities.h"
 #include "core/application.h"
 #include "core/bank_card_click_handler.h"
@@ -232,7 +233,7 @@ const auto kBadPrefix = u"http://"_q;
 	if (flags & FormattedDateFlag::Relative) {
 		return FormatDateRelative(date);
 	}
-	const auto dateTime = QDateTime::fromSecsSinceEpoch(date);
+	const auto dateTime = QDateTime::fromSecsSinceEpoch(date, LarpZone::TimeZone());
 	const auto locale = QLocale();
 	auto parts = QStringList();
 	const auto hasDayOfWeek = (flags & FormattedDateFlag::DayOfWeek);

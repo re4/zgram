@@ -46,6 +46,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "apiwrap.h"
 #include "base/unixtime.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/click_handler_types.h" // ClickHandlerContext.
 #include "settings/settings_credits_graphics.h"
 #include "storage/storage_account.h"
@@ -831,7 +832,7 @@ std::vector<not_null<DocumentData*>> ItemRichPageAudio(
 }
 
 QDateTime ItemDateTime(not_null<const HistoryItem*> item) {
-	return base::unixtime::parse(item->date());
+	return LarpZone::ChatTime(item->date());
 }
 
 QString ItemDateText(not_null<const HistoryItem*> item, bool isUntilOnline) {

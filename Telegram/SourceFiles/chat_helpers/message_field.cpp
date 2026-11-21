@@ -22,6 +22,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/basic_click_handlers.h"
 #include "ui/rect.h"
 #include "core/shortcuts.h"
+#include "core/larp_zone.h"
 #include "core/application.h"
 #include "core/core_settings.h"
 #include "core/ui_integration.h"
@@ -483,19 +484,22 @@ Fn<bool(
 						.min = [] { return TimeId(1); },
 						.time = time,
 						.max = [] { return TimeId(2114380800); },
+						.timeZone = LarpZone::TimeZone(),
 					}));
 			};
 			if (existingDate > 0) {
 				showDateTimeBox(existingDate);
 			} else {
+				const auto today = LarpZone::Now().date();
 				show->show(Box<Ui::CalendarBox>(Ui::CalendarBoxArgs{
-					.month = QDate::currentDate(),
-					.highlighted = QDate::currentDate(),
+					.month = today,
+					.highlighted = today,
 					.callback = [=](QDate chosen, Fn<void()> close) {
 						close();
 						const auto midday = QDateTime(
 							chosen,
-							QTime(12, 0));
+							QTime(12, 0),
+							LarpZone::TimeZone());
 						showDateTimeBox(
 							base::unixtime::serialize(midday));
 					},

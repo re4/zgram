@@ -1255,6 +1255,10 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 "lng_power_user_reply_about" = "Keep a quick reply control close to every message.";
 "lng_power_user_reaction_about" = "Keep quick reactions available on message hover.";
 "lng_power_user_tools" = "Tools and workspaces";
+"lng_larp_zone" = "LarpZone";
+"lng_larp_zone_device" = "Use device time zone";
+"lng_larp_zone_search" = "Search by city or time zone";
+"lng_larp_zone_about" = "Choose the time zone for chat timestamps and the UTC offset Zgram sends to Telegram. Changes apply after restarting Zgram.";
 "lng_power_user_command_palette" = "Command Palette";
 "lng_power_user_command_palette_about" = "Jump to chats, tools, media, and settings from one search.";
 "lng_power_user_command_placeholder" = "Type a command";

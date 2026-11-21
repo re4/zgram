@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "data/data_search_calendar.h"
 
+#include "core/larp_zone.h"
 #include "apiwrap.h"
 #include "base/unixtime.h"
 #include "data/data_document.h"
@@ -24,7 +25,7 @@ namespace {
 
 [[nodiscard]] TimeId DayStartOf(TimeId date) {
 	return base::unixtime::serialize(
-		QDateTime(base::unixtime::parse(date).date(), QTime()));
+		LarpZone::ChatTime(date).date().startOfDay(LarpZone::TimeZone()));
 }
 
 } // namespace
@@ -42,7 +43,7 @@ SearchCalendarController::SearchCalendarController(
 void SearchCalendarController::monthThumbnails(
 		TimeId date,
 		Fn<void(std::vector<DayThumbnail>)> onFinish) {
-	const auto parsed = base::unixtime::parse(date).date();
+	const auto parsed = LarpZone::ChatTime(date).date();
 	const auto key = MonthKey{
 		.peerId = _peerId,
 		.year = parsed.year(),
@@ -102,9 +103,8 @@ void SearchCalendarController::performMonthRequest(const MonthKey &key) {
 	const auto filter = PrepareSearchFilter(_type);
 
 	const auto month = QDate(key.year, key.month, 1);
-	const auto endDate = base::unixtime::serialize(QDateTime(
-		month.addMonths(1).addDays(-1),
-		QTime(23, 59, 59)));
+	const auto endDate = base::unixtime::serialize(
+		month.addMonths(1).addDays(-1).endOfDay(LarpZone::TimeZone()));
 
 	auto &data = _months[key];
 	const auto usedDate = data.state.offsetDate
@@ -215,7 +215,7 @@ void SearchCalendarController::fillMonth(
 		seenDays.emplace(day.date);
 	}
 	for (const auto &period : periods) {
-		const auto parsed = base::unixtime::parse(period.date).date();
+		const auto parsed = LarpZone::ChatTime(period.date).date();
 		if (!period.maxMsgId
 			|| parsed.year() != key.year
 			|| parsed.month() != key.month) {
@@ -249,21 +249,20 @@ void SearchCalendarController::fillCoveredMonths(
 		if (!oldest || period.date < oldest) {
 			oldest = period.date;
 		}
-		const auto parsed = base::unixtime::parse(period.date).date();
+		const auto parsed = LarpZone::ChatTime(period.date).date();
 		months.emplace(QDate(parsed.year(), parsed.month(), 1));
 	}
 	if (!oldest) {
 		return;
 	}
-	const auto oldestDay = base::unixtime::parse(oldest).date();
+	const auto oldestDay = LarpZone::ChatTime(oldest).date();
 	for (const auto &month : months) {
 		if (month.year() == key.year && month.month() == key.month) {
 			continue;
 		} else if (!noMoreData && month <= oldestDay) {
 			continue;
-		} else if (base::unixtime::serialize(QDateTime(
-				month.addMonths(1),
-				QTime())) > offsetDate) {
+		} else if (base::unixtime::serialize(
+				month.addMonths(1).startOfDay(LarpZone::TimeZone())) > offsetDate) {
 			continue;
 		}
 		const auto covered = MonthKey{
@@ -292,7 +291,7 @@ void SearchCalendarController::processMonthData(
 	auto &data = _months[key];
 	const auto month = QDate(key.year, key.month, 1);
 	const auto covered = noMoreData
-		|| (minDate && base::unixtime::parse(minDate).date() < month);
+		|| (minDate && LarpZone::ChatTime(minDate).date() < month);
 	if (!covered && !data.requestId) {
 		performMonthRequest(key);
 		return;
@@ -334,7 +333,7 @@ void SearchCalendarController::finishMonth(MonthData &data) {
 
 std::optional<MsgId> SearchCalendarController::resolveMsgIdByDate(
 		TimeId date) const {
-	const auto parsed = base::unixtime::parse(date).date();
+	const auto parsed = LarpZone::ChatTime(date).date();
 	const auto key = MonthKey{
 		.peerId = _peerId,
 		.year = parsed.year(),
@@ -347,7 +346,7 @@ std::optional<MsgId> SearchCalendarController::resolveMsgIdByDate(
 	}
 
 	const auto dayStart = base::unixtime::serialize(
-		QDateTime(parsed, QTime()));
+		parsed.startOfDay(LarpZone::TimeZone()));
 
 	for (const auto &day : it->second.cache) {
 		if (day.date == dayStart) {

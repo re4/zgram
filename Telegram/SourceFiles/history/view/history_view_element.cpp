@@ -42,6 +42,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/unixtime.h"
 #include "boxes/premium_preview_box.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/core_settings.h"
 #include "core/click_handler_types.h"
 #include "core/ui_integration.h"
@@ -717,7 +718,7 @@ QString DateTooltipText(not_null<Element*> view) {
 		dateText += '\n' + tr::lng_edited_date(
 			tr::now,
 			lt_date,
-			locale.toString(base::unixtime::parse(editedDate), format));
+			locale.toString(LarpZone::ChatTime(editedDate), format));
 	}
 	if (const auto forwarded = item->Get<HistoryMessageForwarded>()) {
 		if (!forwarded->story && forwarded->psaType.isEmpty()) {
@@ -725,7 +726,7 @@ QString DateTooltipText(not_null<Element*> view) {
 				tr::now,
 				lt_date,
 				locale.toString(
-					base::unixtime::parse(forwarded->originalDate),
+					LarpZone::ChatTime(forwarded->originalDate),
 					format));
 			if (forwarded->imported) {
 				dateText = tr::lng_forwarded_imported(tr::now)
@@ -733,7 +734,7 @@ QString DateTooltipText(not_null<Element*> view) {
 			}
 			if (forwarded->savedFromDate
 				&& forwarded->savedFromDate != forwarded->originalDate) {
-				const auto parsed = base::unixtime::parse(
+				const auto parsed = LarpZone::ChatTime(
 					forwarded->savedFromDate);
 				if (parsed != view->dateTime()) {
 					dateText += '\n' + tr::lng_forwarded_forwarded_date(

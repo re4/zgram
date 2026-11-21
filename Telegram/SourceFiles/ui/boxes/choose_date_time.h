@@ -10,6 +10,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/boxes/calendar_box.h"
 #include "ui/layers/generic_box.h"
 
+#include <QtCore/QTimeZone>
+
 namespace style {
 struct FlatLabel;
 struct InputField;
@@ -47,6 +49,7 @@ struct ChooseDateTimeBoxArgs {
 	rpl::producer<QString> description;
 	ChooseDateTimeStyleArgs style;
 	Fn<void(QDate, CalendarImageSetter)> dynamicImageForDate;
+	QTimeZone timeZone = QTimeZone::systemTimeZone();
 };
 
 ChooseDateTimeBoxDescriptor ChooseDateTimeBox(

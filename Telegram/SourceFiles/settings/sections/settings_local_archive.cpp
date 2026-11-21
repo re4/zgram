@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "base/weak_ptr.h"
 #include "core/file_utilities.h"
+#include "core/larp_zone.h"
 #include "data/data_local_archive.h"
 #include "data/data_local_bookmarks.h"
 #include "data/data_peer.h"
@@ -120,7 +121,7 @@ constexpr auto kMaxSearchCandidates = 2000;
 
 [[nodiscard]] QString MessageDate(TimeId date) {
 	return QLocale().toString(
-		QDateTime::fromSecsSinceEpoch(date),
+		QDateTime::fromSecsSinceEpoch(date, LarpZone::TimeZone()),
 		QLocale::ShortFormat);
 }
 

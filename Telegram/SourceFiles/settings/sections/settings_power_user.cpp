@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 #include "boxes/background_box.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/core_settings.h"
 #include "core/power_user_settings.h"
 #include "core/shortcuts.h"
@@ -35,6 +36,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/checkbox.h"
 #include "ui/widgets/labels.h"
+#include "ui/widgets/multi_select.h"
+#include "ui/wrap/slide_wrap.h"
 #include "ui/wrap/vertical_layout.h"
 #include "ui/vertical_list.h"
 #include "window/window_columns.h"
@@ -42,6 +45,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "styles/style_layers.h"
 #include "styles/style_menu_icons.h"
 #include "styles/style_settings.h"
+#include "styles/style_widgets.h"
 
 #include <QtGui/QKeySequence>
 
@@ -182,6 +186,78 @@ void SuggestRestart(not_null<Window::SessionController*> controller) {
 		.confirmText = tr::lng_settings_restart_now(),
 		.cancelText = tr::lng_settings_restart_later(),
 	}));
+}
+
+[[nodiscard]] QString LarpZoneName(const QByteArray &id) {
+	return id.isEmpty()
+		? tr::lng_larp_zone_device(tr::now)
+		: QString::fromLatin1(id).replace(u'_', u' ');
+}
+
+void LarpZoneBox(
+		not_null<Ui::GenericBox*> box,
+		not_null<Window::SessionController*> controller) {
+	box->setTitle(tr::lng_larp_zone());
+	box->setWidth(st::boxWideWidth);
+	box->setMaxHeight(st::boxWideWidth);
+	const auto search = box->setPinnedToTopContent(object_ptr<Ui::MultiSelect>(
+		box,
+		st::defaultMultiSelect,
+		tr::lng_larp_zone_search()));
+	box->setFocusCallback([=] { search->setInnerFocus(); });
+
+	const auto saved = LarpZone::SavedId();
+	auto ids = QTimeZone::availableTimeZoneIds();
+	ids.erase(std::remove_if(ids.begin(), ids.end(), [](const QByteArray &id) {
+		return !id.contains('/') && id != "UTC";
+	}), ids.end());
+	ids.removeAll(saved);
+	if (!saved.isEmpty()) {
+		ids.prepend(saved);
+	}
+	ids.prepend(QByteArray());
+	const auto group = std::make_shared<Ui::RadiobuttonGroup>(
+		int(ids.indexOf(saved)));
+	const auto content = box->verticalLayout();
+	Ui::AddDividerText(content, tr::lng_larp_zone_about());
+	using Row = Ui::SlideWrap<Ui::Radiobutton>;
+	auto rows = std::vector<std::pair<QString, not_null<Row*>>>();
+	for (auto i = 0; i != ids.size(); ++i) {
+		const auto name = LarpZoneName(ids[i]);
+		const auto row = content->add(object_ptr<Row>(
+			content,
+			object_ptr<Ui::Radiobutton>(content, group, i, name),
+			st::boxRowPadding));
+		rows.emplace_back(name, row);
+	}
+	const auto empty = content->add(object_ptr<Ui::SlideWrap<Ui::FlatLabel>>(
+		content,
+		object_ptr<Ui::FlatLabel>(content, tr::lng_search_tab_no_results()),
+		st::boxRowPadding));
+	empty->hide(anim::type::instant);
+	search->setQueryChangedCallback([=](const QString &query) {
+		const auto filter = query.trimmed().replace(u'_', u' ');
+		auto found = false;
+		for (const auto &[name, row] : rows) {
+			const auto matches = name.contains(filter, Qt::CaseInsensitive);
+			row->toggle(matches, anim::type::instant);
+			found |= matches;
+		}
+		empty->toggle(!found, anim::type::instant);
+		box->scrollToY(0);
+	});
+	box->addButton(tr::lng_settings_save(), [=] {
+		const auto id = ids[group->current()];
+		LarpZone::Save(id);
+		box->closeBox();
+		const auto activeId = LarpZone::UsesDeviceZone()
+			? QByteArray()
+			: LarpZone::TimeZone().id();
+		if (id != activeId) {
+			SuggestRestart(controller);
+		}
+	});
+	box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
 }
 
 void ShowLayoutBox(not_null<Window::SessionController*> controller) {
@@ -624,6 +700,18 @@ void BuildPowerUserSection(SectionBuilder &builder) {
 	builder.addDivider();
 	builder.addSkip();
 	builder.addSubsectionTitle(tr::lng_power_user_tools());
+	builder.addButton({
+		.id = u"power_user/larp_zone"_q,
+		.title = tr::lng_larp_zone(),
+		.icon = { &st::menuIconTimer },
+		.label = LarpZone::SavedIdValue() | rpl::map(LarpZoneName),
+		.onClick = [=] {
+			if (controller) {
+				controller->show(Box(LarpZoneBox, controller));
+			}
+		},
+		.keywords = { u"time zone"_q, u"timezone"_q, u"timestamps"_q },
+	});
 	builder.addButton({
 		.id = u"power_user/command_palette"_q,
 		.title = tr::lng_power_user_command_palette(),

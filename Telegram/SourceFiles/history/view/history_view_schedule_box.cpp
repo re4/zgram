@@ -7,6 +7,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "history/view/history_view_schedule_box.h"
 
+#include "core/larp_zone.h"
 #include "api/api_common.h"
 #include "chat_helpers/compose/compose_show.h"
 #include "data/components/scheduled_messages.h"
@@ -100,7 +101,7 @@ namespace {
 					|| item->date() == Api::kScheduledUntilOnlineTimestamp) {
 					continue;
 				}
-				const auto date = base::unixtime::parse(item->date()).date();
+				const auto date = LarpZone::ChatTime(item->date()).date();
 				if (raw->images.contains(date)) {
 					continue;
 				}
@@ -353,6 +354,7 @@ void ScheduleBox(
 		.dynamicImageForDate = (history
 			? ScheduledImageForDate(history, MsgId(details.bareTopicRootId))
 			: nullptr),
+		.timeZone = LarpZone::TimeZone(),
 	});
 
 	if (repeat) {

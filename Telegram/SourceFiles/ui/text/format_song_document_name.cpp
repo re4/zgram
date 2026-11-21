@@ -12,6 +12,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "history/history_item_helpers.h"
 #include "history/history_item.h"
+#include "core/larp_zone.h"
 #include "lang/lang_keys.h"
 #include "ui/text/text_utilities.h"
 
@@ -58,7 +59,7 @@ FormatSongName FormatVoiceName(
 			const auto time = QLocale().toString(
 				parsed.time(),
 				QLocale::ShortFormat);
-			const auto today = QDateTime::currentDateTime().date();
+			const auto today = LarpZone::Now().date();
 			if (date == today) {
 				return tr::lng_player_message_today(
 					tr::now,

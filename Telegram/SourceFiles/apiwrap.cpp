@@ -71,6 +71,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_histories.h"
 #include "data/data_history_messages.h"
 #include "core/core_cloud_password.h"
+#include "core/larp_zone.h"
 #include "core/application.h"
 #include "base/unixtime.h"
 #include "base/random.h"
@@ -3503,7 +3504,7 @@ void ApiWrap::resolveJumpToDate(
 		Fn<void(not_null<PeerData*>, MsgId)> callback) {
 	resolveJumpToTime(
 		chat,
-		TimeId(date.startOfDay().toSecsSinceEpoch()),
+		TimeId(date.startOfDay(LarpZone::TimeZone()).toSecsSinceEpoch()),
 		std::move(callback));
 }
 

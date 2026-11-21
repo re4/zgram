@@ -11,6 +11,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "chat_helpers/bot_command.h"
 #include "core/application.h"
+#include "core/larp_zone.h"
 #include "core/local_url_handlers.h"
 #include "core/file_utilities.h"
 #include "mainwidget.h"
@@ -327,7 +328,7 @@ void ExportToCalendar(TimeId date, const QString &messageText) {
 	const auto format = u"yyyyMMdd'T'HHmmss'Z'"_q;
 	const auto locale = QLocale();
 	const auto raw = locale.toString(
-		base::unixtime::parse(date),
+		LarpZone::ChatTime(date),
 		QLocale::LongFormat);
 	auto summary = raw;
 	summary.replace('\\', u"\\\\"_q);
@@ -919,7 +920,7 @@ void FormattedDateClickHandler::onClick(ClickContext context) const {
 		tr::lng_context_copy_date(tr::now),
 		[date, show] {
 			const auto text = QLocale().toString(
-				base::unixtime::parse(date),
+				LarpZone::ChatTime(date),
 				QLocale::LongFormat);
 			TextUtilities::SetClipboardText(TextForMimeData::Simple(text));
 			show->showToast({
@@ -991,7 +992,7 @@ auto FormattedDateClickHandler::getTextEntity() const -> TextEntity {
 
 QString FormattedDateClickHandler::tooltip() const {
 	return QLocale().toString(
-		base::unixtime::parse(_date),
+		LarpZone::ChatTime(_date),
 		QLocale::LongFormat);
 }
 

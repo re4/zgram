@@ -9,6 +9,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mtproto/session_private.h"
 
 #include "core/version.h"
+#include "core/larp_zone.h"
 #include "mtproto/details/mtproto_bound_key_creator.h"
 #include "mtproto/details/mtproto_dcenter.h"
 #include "mtproto/details/mtproto_dump_to_text.h"
@@ -547,11 +548,12 @@ mtpMsgId SessionPrivate::placeToContainer(
 }
 
 MTPVector<MTPJSONObjectValue> SessionPrivate::prepareInitParams() {
-	const auto local = QDateTime::currentDateTime();
-	const auto utc = QDateTime(local.date(), local.time(), Qt::UTC);
-	const auto shift = base::unixtime::now() - (TimeId)::time(nullptr);
-	const auto delta = int(utc.toSecsSinceEpoch()) - int(local.toSecsSinceEpoch()) - shift;
-	auto sliced = delta;
+	const auto now = base::unixtime::now();
+	auto sliced = LarpZone::UsesDeviceZone()
+		? QDateTime::currentDateTime().offsetFromUtc()
+			- (now - TimeId(::time(nullptr)))
+		: LarpZone::TimeZone().offsetFromUtc(
+			QDateTime::fromSecsSinceEpoch(now, Qt::UTC));
 	while (sliced < -12 * 3600) {
 		sliced += 24 * 3600;
 	}

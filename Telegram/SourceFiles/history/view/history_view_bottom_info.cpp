@@ -16,6 +16,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/text/text_utilities.h"
 #include "ui/painter.h"
 #include "core/ui_integration.h"
+#include "core/larp_zone.h"
 #include "lang/lang_keys.h"
 #include "history/history_item_components.h"
 #include "history/history_item_helpers.h"
@@ -24,7 +25,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/view/media/history_view_media.h"
 #include "history/view/history_view_message.h"
 #include "history/view/history_view_cursor_state.h"
-#include "base/unixtime.h"
 #include "chat_helpers/emoji_interactions.h"
 #include "core/click_handler_types.h"
 #include "main/main_session.h"
@@ -70,7 +70,7 @@ namespace {
 }
 
 [[nodiscard]] QString FormatEditedDate(QDateTime sent, QDateTime edited) {
-	const auto today = QDateTime::currentDateTime().date();
+	const auto today = LarpZone::Now().date();
 	const auto time = QLocale().toString(edited.time(), QLocale::ShortFormat);
 	if (sent.date() == today && edited.date() == today) {
 		return tr::lng_edited_at(tr::now, lt_time, time);
@@ -700,7 +700,7 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
 		result.flags |= Flag::Edited;
 		if (item->history()->session().messagePrimaryEditedDate()) {
 			result.flags |= Flag::EditedPrimary;
-			result.editedDate = base::unixtime::parse(editedDate);
+			result.editedDate = LarpZone::ChatTime(editedDate);
 		}
 	}
 	if (IsAnchoredEphemeral(item)) {
@@ -759,13 +759,13 @@ BottomInfo::Data BottomInfoDataFromMessage(not_null<Message*> message) {
 		return result;
 	}
 	if (forwarded->savedFromMsgId && forwarded->savedFromDate) {
-		result.date = base::unixtime::parse(forwarded->savedFromDate);
+		result.date = LarpZone::ChatTime(forwarded->savedFromDate);
 		result.flags |= Flag::ForwardedDate;
 	} else if (forwarded->originalDate
 		&& (message->context() == Context::SavedSublist
 			|| item->history()->peer->isSelf())
 		&& !item->externalReply()) {
-		result.date = base::unixtime::parse(forwarded->originalDate);
+		result.date = LarpZone::ChatTime(forwarded->originalDate);
 		result.flags |= Flag::ForwardedDate;
 	}
 	// We don't want to pass and update it in Data for now.
