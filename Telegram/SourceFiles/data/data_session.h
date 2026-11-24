@@ -115,6 +115,7 @@ struct GiftUpdate {
 	Data::SavedStarGiftId id;
 	QString slug;
 	Action action = {};
+	bool listingChanged = false;
 };
 struct GiftsUpdate {
 	not_null<PeerData*> peer;

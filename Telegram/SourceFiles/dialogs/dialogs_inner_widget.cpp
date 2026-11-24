@@ -1880,7 +1880,7 @@ void InnerWidget::fillRightButton(
 	button.activeBg = generateBg(st.button.textFg);
 }
 
-[[nodiscard]] RightButton *InnerWidget::maybeCacheRightButton(Row *row) {
+RightButton *InnerWidget::maybeCacheRightButton(Row *row) {
 	if (const auto user = MaybeBotWithApp(row)) {
 		const auto it = _rightButtons.find(user->id);
 		if (it == _rightButtons.end()) {
@@ -5185,9 +5185,9 @@ void InnerWidget::refresh(bool toTop) {
 		}
 	} else if (_state == WidgetState::Filtered) {
 		if (_searchEmpty && !_searchEmpty->isHidden()) {
-			h = searchedOffset() + st::recentPeersEmptyHeightMin;
 			_searchEmpty->setMinimalHeight(st::recentPeersEmptyHeightMin);
-			_searchEmpty->move(0, h - st::recentPeersEmptyHeightMin);
+			_searchEmpty->move(0, searchedOffset());
+			h = searchedOffset() + _searchEmpty->height();
 		} else if (_loadingAnimation) {
 			h = searchedOffset() + _loadingAnimation->height();
 		} else {
@@ -5397,6 +5397,14 @@ void InnerWidget::resizeEmpty() {
 	if (_searchEmpty) {
 		_searchEmpty->resizeToWidth(width());
 		_searchEmpty->move(0, searchedOffset());
+		if (_geometryInited
+			&& _state == WidgetState::Filtered
+			&& !_searchEmpty->isHidden()) {
+			const auto full = searchedOffset() + _searchEmpty->height();
+			if (height() != full) {
+				resize(width(), full);
+			}
+		}
 	}
 	if (_loadingAnimation) {
 		_loadingAnimation->resizeToWidth(width());
@@ -5986,7 +5994,7 @@ QImage *InnerWidget::cacheChatsFilterTag(
 	auto colorIndex = -1;
 	if (filter.id()) {
 		roundedText = filter.title().text;
-		roundedText.text = roundedText.text.toUpper();
+		roundedText.text = Ui::Text::Upper(roundedText.text);
 		if (filter.colorIndex()) {
 			colorIndex = *(filter.colorIndex());
 		}

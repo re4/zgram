@@ -4058,7 +4058,7 @@ template <>
 void Account::writePrefImpl<QByteArray>(
 		std::string_view key,
 		QByteArray value) {
-	writePrefGeneric(key, value);
+	writePrefGeneric(key, std::move(value));
 }
 
 } // namespace Storage
